@@ -4,9 +4,10 @@ var sessionStamp;
 function readingStart() {
 	$("#MW").val("0");
 	$.ajax({
-		url : "/REST/GetWS/StartRecording",
+		url : "REST/GetWS/StartRecording",
 		dataType : "json",
 		async : true,
+		type : 'GET',
 		success : function(data) {
 			return;
 		}

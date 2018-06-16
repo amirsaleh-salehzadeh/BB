@@ -21,7 +21,7 @@ public class ThreadEEGReceiver implements Runnable {
 	public static MuseOscServer museOscServer;
 	public static MuseSignalEntity EEG;
 	public static OscP5 museServer;
-	public static boolean stopHeadband;
+//	public static boolean stopHeadband;
 	// private GetServiceStreamSocketMediator socketMSG;
 	private ObjectMapper mapper;
 	public static Charset charset;// = Charset.forName("UTF-8");
@@ -33,9 +33,6 @@ public class ThreadEEGReceiver implements Runnable {
 		// muse-io --device Muse-1E5B --osc osc.udp://localhost:5003
 		museOscServer = new MuseOscServer();
 		museOscServer.startRecord();
-//		museOscServer.museServer = new OscP5(this, "localhost", 5003, OscProperties.UDP);
-		stopHeadband = false;
-		// socketMSG = new GetServiceStreamSocketMediator();
 		mapper = new ObjectMapper();
 		charset = Charset.forName("UTF-8");
 		encoder = charset.newEncoder();
@@ -50,32 +47,24 @@ public class ThreadEEGReceiver implements Runnable {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			if (stopHeadband) {
-				EEG = new MuseSignalEntity(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-				museOscServer.startRecord();
-				killer = false;
-				Thread.currentThread().interrupt();
-			} else {
-//				if (museOscServer.museServer == null) {
-//					museOscServer = new MuseOscServer();
-//					museOscServer.museServer = new OscP5(this, "localhost", 5003, OscProperties.UDP);
-//				}
 				EEG = museOscServer.EEG;
 				if (EEG != null) {
 					try {
 						EEG.setIMG("");
 						for (Session session : GetServiceStreamSocketMediator.peers) {
-							if (session.isOpen())
-								session.getAsyncRemote().sendText(mapper.writeValueAsString(EEG));
+							String txt = mapper.writeValueAsString(EEG);
+							if (session.isOpen() && txt != null && txt.length() > 1)
+								session.getAsyncRemote().sendText(txt);
 						}
 					} catch (Throwable e) {
 						e.printStackTrace();
+						continue;
 					}
 				}
-			}
+//			}
 		}
 		killer = false;
-		museOscServer.startRecord();
+		museOscServer.stopRecord();
 		Thread.currentThread().interrupt();
 	}
 

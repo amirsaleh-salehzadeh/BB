@@ -48,19 +48,19 @@ public class FileUtils {
 
     public static String formatCsvLine(EegData eegData) {
         StringBuilder builder = new StringBuilder();
-        builder.append(TimeUtils.getNtpTimeString(eegData.getTimeTagNtp())); // real timetag
-        builder.append(CSV_SEPARSATOR);
-        builder.append(TimeUtils.format(eegData.getServerTimeTag()));  // server timetag
-        builder.append(CSV_SEPARSATOR);
-        builder.append(eegData.getServerTimeTag()); // raw timetag
-        builder.append(CSV_SEPARSATOR);
+//        builder.append(TimeUtils.getNtpTimeString(eegData.getTimeTagNtp())); // real timetag
+//        builder.append(CSV_SEPARSATOR);
+//        builder.append(TimeUtils.format(eegData.getServerTimeTag()));  // server timetag
+//        builder.append(CSV_SEPARSATOR);
+//        builder.append(eegData.getServerTimeTag()); // raw timetag
+//        builder.append(CSV_SEPARSATOR);
         builder.append(eegData.getServerTimeTag());// raw server time
         builder.append(CSV_SEPARSATOR);
-        builder.append(eegData.getType());// type
-        builder.append(CSV_SEPARSATOR);
+//        builder.append(eegData.getType());// type
+//        builder.append(CSV_SEPARSATOR);
         for (Object str: eegData.getArguments()) {
-        	if(Float.isNaN((float) str))
-        		str = 0.0;
+//        	if(Float.isNaN((float) str))
+//        		str = 0.0;
             builder.append(str); // data
             builder.append(CSV_SEPARSATOR);
         }

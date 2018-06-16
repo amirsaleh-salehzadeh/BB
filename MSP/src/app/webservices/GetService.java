@@ -70,9 +70,9 @@ public class GetService extends Application {
 			th.setDaemon(true);
 			th.start();
 		}
-		if (t != null) {
-			t.stopHeadband = false;
-		}
+//		if (t != null) {
+//			t.stopHeadband = false;
+//		}
 		if (museOscServer == null) {
 			museOscServer = t.museOscServer;
 		}
@@ -103,15 +103,13 @@ public class GetService extends Application {
 	@Produces("application/json")
 	public String stopHeadband() {
 		if (t != null) {
-			t.stopHeadband = true;
+//			t.stopHeadband = true;
 			t.killer = false;
 		}
 		museOscServer.stopRecord();
 		museOscServer.record = false;
 		museOscServer = null;
 		t = null;
-		th.destroy();
-		th.stop();
 		th = null;
 		String json = "";
 		return json;

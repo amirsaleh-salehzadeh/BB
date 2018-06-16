@@ -147,15 +147,15 @@ public class MuseOscServer {
 		}
 	}
 
-	private static final String HEADER = "Timetag Ntp,Server Timestamp,Raw Timetag, Raw Server Timestamp,Data Type,data";
+	private static final String HEADER = "Timestamp,Data";
 
 	public void dumpResults(String filename) {
 		if (!record && messages.size() <= 0)
 			return;
 		try {
 			final List<EegData> tmp = messages;
-			messages.removeAll(tmp);
-			for (EegData eegData : tmp) {
+			messages = new ArrayList<EegData>();
+			for (final EegData eegData : tmp) {
 				String fileName = FileUtils.resolve(eegData.getType() + ".csv").toString();
 				File f = new File(fileName);
 				boolean newFile = false;
@@ -183,12 +183,6 @@ public class MuseOscServer {
 			EEG = new MuseSignalEntity();
 		}
 		try {
-//			if (msg.checkAddrPattern("/muse/eeg") == true) {
-//				EEG.setEEG1(msg.get(0).floatValue());
-//				EEG.setEEG2(msg.get(1).floatValue());
-//				EEG.setEEG3(msg.get(2).floatValue());
-//				EEG.setEEG4(msg.get(3).floatValue());
-//			}
 			if (msg.checkAddrPattern("/muse/elements/delta_session_score") == true) {
 				EEG.setDeltaABS(getVal(msg));
 			}
@@ -237,11 +231,9 @@ public class MuseOscServer {
 			if (msg.checkAddrPattern("/muse/elements/experimental/concentration") == true) {
 				EEG.setConcentration(msg.get(0).floatValue());
 				EEG.setRNN(msg.get(0).floatValue());
-				System.out.println("Conc > " + msg.get(0).floatValue());
 			}
 			if (msg.checkAddrPattern("/muse/elements/experimental/mellow") == true) {
 				EEG.setMeditation(msg.get(0).floatValue());
-				System.out.println("Melo > " + msg.get(0).floatValue());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -26,25 +26,31 @@ public class ExcelDataStorage {
 	}
 
 	public void insertDataToTheFile(ArrayList<String> input, boolean append, String fileName) {
-		PrintWriter out = null;
 		try {
-			File f = new File("C:\\RecordingFiles");
+ 			File f = new File("C:\\RecordingFiles");
 			if (!f.exists())
 				f.mkdir();
-			f = new File("C:\\RecordingFiles\\" + fileName + ".txt");
-			if (!f.exists())
+			f = new File("C:\\RecordingFiles\\" + fileName + ".csv");
+			boolean newFile = false;
+			if (!f.exists()) {
 				f.createNewFile();
-			out = new PrintWriter(
-					new BufferedWriter(new FileWriter("C:\\RecordingFiles\\" + fileName + ".txt", append)));
+				newFile = true;
+			}
+			for (int j = 0; j < input.size(); j++) {
+				FileWriter writer = new FileWriter("C:\\RecordingFiles\\" + fileName + ".csv", append);
+				try {
+					String time = System.currentTimeMillis() + "";
+					writer.append((time).substring(time.length() - 7, time.length()) + "__"
+							 + input.get(j).toString() + "\n");
+					writer.flush();
+					writer.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		for (int j = 0; j < input.size(); j++) {
-			String time = System.currentTimeMillis() + "";
-			out.println((time).substring(time.length() - 7, time.length()) + "__"
-					+ input.get(j).toString() + "\n");
-		}
-		out.close();
 	}
 
 	public static void createReportExcelFile(String sheetName, Map<String, Object> colValue, Integer time) {
@@ -86,7 +92,8 @@ public class ExcelDataStorage {
 				firstRow.next();
 				continue;
 			}
-//			System.out.println(">>" + colValue.get(rowhead.getCell(colNo).getStringCellValue()));
+			// System.out.println(">>" +
+			// colValue.get(rowhead.getCell(colNo).getStringCellValue()));
 			row.createCell(colNo)
 					.setCellValue(Double.parseDouble("" + colValue.get(rowhead.getCell(colNo).getStringCellValue())));
 			colNo++;
