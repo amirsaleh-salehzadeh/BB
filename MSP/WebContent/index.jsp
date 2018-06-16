@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="gr__webgazer_cs_brown_edu">
+<html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>CCI Demo</title>
@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/training.progress.bars.css">
 <link rel="stylesheet" href="css/themes/default/theme-classic.css">
-<script src="js/training/precision_store_points.js"></script>
+<!-- <script src="js/training/precision_store_points.js"></script> -->
 <script async="async" type="text/javascript"
 	src="js/webGazer/webgazer.js"></script>
 <script src="js/jquery.js"></script>
@@ -25,6 +25,7 @@
 <script src="js/webGazer/precision.js"></script>
 <script src="js/training/calibration.js"></script>
 <script src="js/training/precision_calculation.js"></script>
+<script src="js/training/popup.mind.wandering.js"></script>
 <script src="js/training/sweetalert.min.js"></script>
 <script src="js/training/resize_canvas.js"></script>
 <script type="text/javascript"
@@ -36,29 +37,42 @@
 	<div data-role="page" id="mainPage" data-theme="a">
 		<div data-role="header" data-fullscreen="true"
 			data-position-fixed="true" data-position="fixed">
-			<a href="#leftSidePanel" data-role="button" id="leftSideMenuBTN"
-				role="button"
-				class="ui-btn ui-btn-left ui-icon-bars ui-btn-icon-notext ui-shadow ui-corner-all">&nbsp;</a>
-			<h2>
-				<img alt="" src="images/th.jpg" style="width: 3%;"> CCI <span
-					id="timerSpan"></span>
-			</h2>
-			<div data-role="navbar" data-grid="d">
-				<ul>
-					<li><a href="#" onclick="Restart()">Calibrate</a></li>
-					<li><a href="#" onclick="connectToHeadband()">Connect</a></li>
-					<li><a href="#" onclick="readingStart()">Start</a></li>
-					<li><a href="#" onclick="readingPause()">Pause</a></li>
-					<li><a href="#" onclick="finishRecording()">End</a></li>
-					<!-- 					<li><a href="#" onclick="eyeTrackerPS()"></a></li> -->
-				</ul>
+			<div data-role="controlgroup" data-type="horizontal"
+				style="margin-left: 75px; margin-top: 5px;">
+				<a href="#" data-role="button"><img alt="battery"
+					src="images/batt.png" width="44%"></a> <a href="#" data-role="button"
+					style="color: green;" id="battVal">--%</a> <a
+					href="#" data-role="button" id="hs1" class="horseShoes"
+					style="color: white;">TP9</a> <a href="#" data-role="button"
+					id="hs2" class="horseShoes" style="color: white;">Fp1</a><a
+					href="#" data-role="button" id="hs3" class="horseShoes"
+					style="color: white;">&nbsp;</a> <a href="#" data-role="button"
+					id="hs4" class="horseShoes" style="color: white;">Fp2</a> <a
+					href="#" data-role="button" id="hs5" class="horseShoes"
+					style="color: white;">TP10</a> <a href="#leftSidePanel"
+					data-role="button" id="leftSideMenuBTN" role="button"
+					class="ui-btn ui-icon-bars ui-btn-icon-notext ui-shadow ui-corner-all">&nbsp;</a>
+				<a href="#" data-role="button" onclick="Restart()"
+					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Calibrate</a>
+				<a href="#" data-role="button"
+					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye"
+					onclick="eyeTrackerPS()" data-icon="eye">Eye Tracker
+					Pause/Start</a><a href="#" data-role="button"
+					onclick="connectToHeadband()"
+					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Connect</a>
+				<a href="#" data-role="button" onclick="readingStart()"
+					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-arrow-d-r">Start</a>
+				<a href="#" data-role="button" onclick="readingPause()"
+					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Pause</a>
+				<a href="#" data-role="button" onclick="finishRecording()"
+					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">End</a>
+				<a href="#" data-role="button" style="padding: 0; margin: 0;"><img
+					alt="" src="images/th.jpg" style="width: 15%;"> CCI <span
+					id="timerSpan"></span></a> <a href="#" data-role="button"
+					id="blinkContainer" style="visibility: hidden;"> <img
+					alt="blink" src="images/eye.png" width="35%">
+				</a>
 			</div>
-			<a href="#leftSidePanel" data-role="button" id="leftSideMenuBTN"
-				role="button"
-				class="ui-btn ui-btn-left ui-icon-bars ui-btn-icon-notext ui-shadow ui-corner-all">&nbsp;</a>
-			<a href="#" data-role="button" role="button"
-				class="ui-btn ui-btn-right ui-icon-left ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye"
-				onclick="eyeTrackerPS()" data-icon="eye">Eye Tracker Pause/Start</a>
 		</div>
 		<div data-role="panel" data-position="left" data-display="overlay"
 			id="leftSidePanel" class="ui-bar"></div>
@@ -66,7 +80,10 @@
 			<canvas id="plotting_canvas" width="100%" height="100%"
 				style="position: fixed; left: 0; right: 0; top: 0; bottom: 0;"></canvas>
 			<div class="ui-block-solo" id="textContainer"></div>
-			<div id="evaluationDiv"></div>
+			<a href="#" data-role="button" role="button"
+				style="position: fixed; bottom: 11px; right: 11px;"
+				class="ui-shadow ui-btn ui-corner-all ui-btn-inline ui-btn-icon-left ui-icon-star"
+				onclick="openMWpopup()">Action</a>
 		</div>
 		<div data-role="footer" id="footerBar" data-position="fixed"
 			class="ui-bar">
@@ -108,7 +125,7 @@
 					<div class="hprogress large" style="background-color: #FF0000;">
 						<div class="hprogress-bar slideInDown" role="progressbar"
 							aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"
-							id="MWPrediction"></div>
+							id="RNNPrediction"></div>
 						<div class="text-center p-absolute">
 							<i class="fa">RNN</i>
 						</div>
@@ -116,7 +133,7 @@
 					<div class="hprogress large" style="background-color: #FF0000;">
 						<div class="hprogress-bar slideInDown" role="progressbar"
 							aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"
-							id="MWPrediction"></div>
+							id="ANNPrediction"></div>
 						<div class="text-center p-absolute">
 							<i class="fa">ANN</i>
 						</div>
@@ -124,7 +141,7 @@
 					<div class="hprogress large" style="background-color: #FF0000;">
 						<div class="hprogress-bar slideInDown" role="progressbar"
 							aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"
-							id="MWPrediction"></div>
+							id="SVMPrediction"></div>
 						<div class="text-center p-absolute">
 							<i class="fa">SVM</i>
 						</div>
@@ -149,25 +166,80 @@
 				class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
 			<div class="ui-block-solo">
 				<img src="images/th.jpg" width="64" height="64"
-					alt="webgazer demo instructions">
+					alt="webgazer demo instructions"> Has Your Mind Wandered?
 			</div>
-			<fieldset data-role="controlgroup" data-type="horizontal"
-				data-mini="true">
-				<legend>Has Your Mind Wandered?</legend>
-				        <input type="radio" name="radio-choice-h-2"
-					id="option_mw_sd" value="on" checked="checked">         <label
-					for="option_mw_sd">Intentionally</label>         <input
-					type="radio" name="radio-choice-h-2" id="option_mw_pd" value="off">
-				        <label for="option_mw_pd">Someone Distracted Me</label> <input
-					type="radio" name="radio-choice-h-2" id="option_mw_cp"
-					value="other">         <label for="option_mw_cp">Cell
-					Phone</label> <input type="radio" name="radio-choice-h-2" id="option_mw_dd"
-					value="other">         <label for="option_mw_dd">Day
-					Dreaming</label> <input type="radio" name="radio-choice-h-2"
-					id="option_mw_no" value="other" data-rel="back">         <label
-					for="option_mw_no">No</label>
+			<fieldset data-role="controlgroup" data-type="horizontal">
+				     <a href="#" onclick="openReasonPopup()"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-check">Yes</a>
+				    <a href="#"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-right ui-icon-back"
+					data-rel="back">No</a>
 			</fieldset>
 		</div>
+		<div id="MWpopup" data-role="popup">
+			<a href="#" data-rel="back"
+				class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+			<div class="ui-block-solo">
+				<img src="images/th.jpg" width="64" height="64"
+					alt="webgazer demo instructions"> What was the reason?
+			</div>
+			<fieldset data-role="controlgroup" data-type="horizontal">
+				<a href="#" onclick="openReasonPopup()"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-phone">Cell
+					Phone</a>     <a href="#"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-cloud"
+					onclick="openDayDreamingPopup()">Day Dreaming</a>  <a href="#"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-user">Someone
+					else</a>  <a href="#"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-check">My
+					choice</a>  <a href="#"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-back"
+					data-rel="back">Back</a>
+			</fieldset>
+		</div>
+		<div id="dreamingPopup" data-role="popup">
+			<a href="#" data-rel="back"
+				class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+			<div class="ui-block-solo">
+				<img src="images/th.jpg" width="64" height="64"
+					alt="webgazer demo instructions">
+			</div>
+			<fieldset data-role="controlgroup" data-type="horizontal">
+				<legend>What you were dreaming about?</legend>
+				<a href="#" onclick="openReasonPopup()"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-arrow-l">About
+					Past</a><a href="#"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-arrow-r"
+					onclick="openDayDreamingPopup()">About Future</a>  <a href="#"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-user">A
+					Task I Should Do</a>  <a href="#"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-check">Some
+					Ideas Related To Text</a>  <a href="#"
+					class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-back"
+					data-rel="back">Back</a>
+			</fieldset>
+		</div>
+		<form id="dataClassificationLabels">
+			<!-- 		MIND WANDERING -->
+			<input type="hidden" name="MW" id="MW" value="0"
+				class="classificationLabelValue">
+			<!-- 		MIND WANDERING -->
+			<input type="hidden" name="G" id="gender" value="1"
+				class="classificationLabelValue">
+			<!-- 		DISTRACTION REASON -->
+			<input type="hidden" name="DR" id="dr" value="0"
+				class="classificationLabelValue">
+			<!-- 		MOOD -->
+			<input type="hidden" name="M" id="mood" value="0"
+				class="classificationLabelValue">
+		</form>
+		
+		
+		
+<!-- 		CALIBRATION DIV -->
+		
+		
+		
 		<div class="calibrationDiv">
 			<input type="button" class="Calibration" id="Pt1"
 				style="display: none;" data-role="none"> <input
@@ -184,20 +256,6 @@
 				data-role="none"> <input type="button" class="Calibration"
 				id="Pt9" style="display: none;" data-role="none">
 		</div>
-		<form id="dataClassificationLabels">
-			<!-- 		MIND WANDERING -->
-			<input type="hidden" name="MW" id="MW" value="0"
-				class="classificationLabelValue">
-			<!-- 		MIND WANDERING -->
-			<input type="hidden" name="G" id="gender" value="1"
-				class="classificationLabelValue">
-			<!-- 		DISTRACTION REASON -->
-			<input type="hidden" name="DR" id="dr" value="0"
-				class="classificationLabelValue">
-			<!-- 		MOOD -->
-			<input type="hidden" name="M" id="mood" value="0"
-				class="classificationLabelValue">
-		</form>
 	</div>
 </body>
 </html>

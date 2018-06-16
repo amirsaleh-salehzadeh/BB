@@ -1,6 +1,9 @@
 package app.webservices;
 
 import java.io.EOFException;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashSet;
@@ -20,15 +23,13 @@ import org.apache.tomcat.util.codec.binary.StringUtils;
 
 import app.datastream.eeg.MuseOscServer;
 
-@ServerEndpoint("/EEGStreamSocket/{client-id}")
+@ServerEndpoint("/VideoStreamSocket/{client-id}")
 public class GetServiceStreamSocketMediator {
 
 	public static Set<Session> peers = Collections.synchronizedSet(new HashSet<Session>());
 
 	@OnMessage
 	public void onMessage(byte[] imageData, @PathParam("client-id") String clientId, Session session) {
-//		System.out.println(faceFeatures);
-//		String faceFeatures, 
 		if (imageData != null && imageData.length > 0) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("data:image/png;base64,");
@@ -36,7 +37,18 @@ public class GetServiceStreamSocketMediator {
 			if (MuseOscServer.EEG != null && !MuseOscServer.EEG.getIMG().equals(sb.toString()))
 				MuseOscServer.EEG.setIMG(sb.toString());
 		}
-		
+		FileOutputStream fileOuputStream;
+		try {
+			fileOuputStream = new FileOutputStream("C:\\RecordingFiles\\video.mpg", true);
+			fileOuputStream.write(imageData);
+			fileOuputStream.close();
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	@OnOpen

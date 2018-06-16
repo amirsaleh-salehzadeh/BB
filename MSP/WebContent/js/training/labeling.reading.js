@@ -4,7 +4,7 @@ var sessionStamp;
 function readingStart() {
 	$("#MW").val("0");
 	$.ajax({
-		url : "http://localhost:8090/MSP/REST/GetWS/StartRecording",
+		url : "/REST/GetWS/StartRecording",
 		dataType : "json",
 		async : true,
 		success : function(data) {
@@ -32,9 +32,6 @@ function readingStart() {
 
 function readingPause() {
 	clearInterval(sessionStamp);
-	// $(document).click(function() {
-	// $("#distractionPopup").popup("open");
-	// });
 }
 
 function readingDone() {
@@ -44,21 +41,8 @@ function readingDone() {
 function intervalTimeStamp() {
 	if (cl == null)
 		return;
-	// var labelElems = {
-	// MW : parseInt($("#MW").val()),
-	// G : parseInt($("#gender").val()),
-	// DR : parseInt($("#dr").val()),
-	// M : parseInt($("#mood").val())
-	// };
-
 	var faceFeatures = new Array();
 	var labelElems = new Array();
-	// var labelElems = {
-	// MW : parseInt($("#MW").val()),
-	// G : parseInt($("#gender").val()),
-	// DR : parseInt($("#dr").val()),
-	// M : parseInt($("#mood").val())
-	// };
 	labelElems.push({
 		MW : parseInt($("#MW").val())
 	});
@@ -71,7 +55,7 @@ function intervalTimeStamp() {
 	labelElems.push({
 		m : parseInt($("#mood").val())
 	});
-	var currentFFPositions = cl.getCurrentPosition();
+	var currentFFPositions = cl.getCurrentPrediction();
 	for (var i = 0; i < currentFFPositions.length; i++) {
 		var pos = {
 			x : currentFFPositions[i][0],
@@ -96,6 +80,3 @@ function intervalTimeStamp() {
 	return;
 }
 
-// function labelReading(predictionVal){
-//	
-// }

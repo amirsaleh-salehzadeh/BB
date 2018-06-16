@@ -45,6 +45,34 @@ public class MuseSignalEntity {
 	public float EEG4 = 0;
 	public float Concentration = 0;
 	public float Meditation = 0;
+	public float RNN = 0;
+	public float ANN = 0;
+	public float SVN = 0;
+	
+	public float getRNN() {
+		return RNN;
+	}
+
+	public void setRNN(float rNN) {
+		RNN = rNN;
+	}
+
+	public float getANN() {
+		return ANN;
+	}
+
+	public void setANN(float aNN) {
+		ANN = aNN;
+	}
+
+	public float getSVN() {
+		return SVN;
+	}
+
+	public void setSVN(float sVN) {
+		SVN = sVN;
+	}
+
 	public String IMG = "";
 
 	public float getLowFreqABS() {

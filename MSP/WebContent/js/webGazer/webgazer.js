@@ -10781,19 +10781,20 @@ var mosseFilterResponses = function() {
      * @param {URL} videoSrc - The video url to use
      */
     function init(videoSrc) {
-        videoElement = document.createElement('video');
+//        videoElement = document.createElement('video');
+    	videoElement = document.getElementById('webgazerVideoPresentation');
         videoElement.id = webgazer.params.videoElementId;
         videoElement.autoplay = true;
         console.log(videoElement);
-        videoElement.style.display = 'none';
+//        videoElement.style.display = 'none';
 
         //turn the stream into a magic URL
         videoElement.src = videoSrc;
-        document.body.appendChild(videoElement);
+//        document.body.appendChild(videoElement);
 
         videoElementCanvas = document.createElement('canvas');
         videoElementCanvas.id = webgazer.params.videoElementCanvasId;
-        videoElementCanvas.style.display = 'none';
+//        videoElementCanvas.style.display = 'none';
         document.body.appendChild(videoElementCanvas);
 
         addMouseEventListeners();
@@ -10823,6 +10824,7 @@ var mosseFilterResponses = function() {
 
         if (debugVideoLoc) {
             init(debugVideoLoc);
+            console.log("debug video loc  line 10826");
             return webgazer;
         }
 

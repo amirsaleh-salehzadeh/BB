@@ -26,7 +26,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class RecordData {
-	private static int tmpTimer = 0;
 	public static int outTimer = 0;
 
 	public static void main(String[] arString) {
@@ -35,6 +34,8 @@ public class RecordData {
 	}
 
 	public static void recordMainTask(String value, boolean append, String fileName) {
+		value = value.replaceAll("\\]", "");
+		value = value.replaceAll("\\[", "");
 		ArrayList<String> StringEMGCollector = new ArrayList<String>();
 		StringEMGCollector.add(value);
 		ExcelDataStorage ds = new ExcelDataStorage();

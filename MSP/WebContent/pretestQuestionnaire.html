@@ -1,0 +1,100 @@
+
+<style>
+div.questionnaire-item, .ui-controlgroup, fieldset.ui-controlgroup {
+	border: 2px solid darkblue;
+	border-radius: 7px;
+	margin: 5px;
+	padding: 3px;
+}
+</style>
+<form action="#" method="post" id="questionnaireForm">
+	<fieldset data-role="controlgroup" data-type="horizontal"
+		data-mini="true">
+		<legend>Gender</legend>
+		<label for="female">Female</label><input type="radio" name="gender"
+			id="female" value="grid"><label for="male">Male</label><input
+			type="radio" name="gender" id="male" value="1">
+	</fieldset>
+	<!-- <fieldset data-role="controlgroup" data-type="horizontal" -->
+	<!-- 	data-mini="true"> -->
+	<!-- 	<legend>Age</legend> -->
+	<!-- 	<label for="age0">Under 20</label><input type="radio" name="age" -->
+	<!-- 		id="age0" value="0" ><label for="age1">20-26</label><input -->
+	<!-- 		type="radio" name="age" id="age1" value="1"><label for="age2">26-40</label><input -->
+	<!-- 		type="radio" name="age" id="age2" value="2"><label for="age3">40-60</label><input -->
+	<!-- 		type="radio" name="age" id="age3" value="3"> <label for="age4">Over -->
+	<!-- 		60</label><input type="radio" name="age" id="age4" value="4"> -->
+	<!-- </fieldset> -->
+	<div class="ui-block-solo questionnaire-item">
+		<label for="age">Age: </label> <input type="text" name="age" id="age"
+			value="22">
+	</div>
+	<fieldset data-role="controlgroup" data-type="horizontal"
+		data-mini="true">
+		<legend>Highest education:</legend>
+		<label for="education0">High school degree</label><input type="radio"
+			name="education" id="education0" value="0"><label
+			for="education1">Bachelors degree</label><input type="radio"
+			name="education" id="education1" value="1"><label
+			for="education2">Masters degree</label><input type="radio"
+			name="education" id="education2" value="2"><label
+			for="education3">Doctorate</label><input type="radio"
+			name="education" id="education3" value="3">
+	</fieldset>
+	<fieldset data-role="controlgroup" data-type="horizontal"
+		data-mini="true">
+		<legend>Home Language</legend>
+		<label for="language0">English</label><input type="radio"
+			name="language" id="language0" value="0"><label
+			for="language1">others</label><input type="radio" name="language"
+			id="language1" value="1"><label for="language2">1</label><input
+			type="radio" name="language" id="language2" value="2"><label
+			for="language3">2</label><input type="radio" name="language"
+			id="language3" value="3">
+	</fieldset>
+	<fieldset data-role="controlgroup" data-type="horizontal"
+		data-mini="true">
+		<legend>I prefer to get text contents using</legend>
+		<label for="readingPreference0">Printed Copy</label><input
+			type="radio" name="readingPreference" id="readingPreference0"
+			value="0"><label for="readingPreference1">Computer
+			Screen</label><input type="radio" name="readingPreference"
+			id="readingPreference1" value="1"><label
+			for="readingPreference2">Mobile Device</label><input type="radio"
+			name="readingPreference" id="readingPreference2" value="2"><label
+			for="readingPreference3">Audio Book</label><input type="radio"
+			name="readingPreference" id="readingPreference3" value="3">
+	</fieldset>
+
+	<div class="ui-block-solo questionnaire-item">
+		I usually read <input type="text" name="readingHrsAday" id="readingHrsAday"
+			value="1" data-inline="true" data-mini="true"> hours a day
+	</div>
+	<div class="ui-block-solo questionnaire-item">
+		<label for="myRatingToReading">I think I read well, and stay
+			focused on it (Disagree: 0, Agree: 100) </label> <input type="range"
+			name="myRatingToReading" id="myRatingToReading" value="50" min="0"
+			max="100" data-highlight="true">
+	</div>
+	<fieldset data-role="controlgroup" data-type="horizontal"
+		data-mini="true">
+		<legend>I enjoy reading </legend>
+		<label for="readingContentPreference0">novels</label><input
+			type="radio" name="readingContentPreference"
+			id="readingContentPreference0" value="0"><label
+			for="readingContentPreference1">science fiction</label><input
+			type="checkbox" name="readingContentPreference"
+			id="readingContentPreference1" value="1"><label
+			for="readingContentPreference2">historical</label><input
+			type="checkbox" name="readingContentPreference"
+			id="readingContentPreference2" value="2"><label
+			for="readingContentPreference3">poems</label><input type="checkbox"
+			name="readingContentPreference" id="readingContentPreference3"
+			value="3"> <label for="readingContentPreference4">animal
+			care</label><input type="checkbox" name="readingContentPreference"
+			id="readingContentPreference4" value="4">
+	</fieldset>
+	<div class="ui-block-solo">
+		<input type="button" value="submit" onclick="submitPreTaskForm()">
+	</div>
+</form>

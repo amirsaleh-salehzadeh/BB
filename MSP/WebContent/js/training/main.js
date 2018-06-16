@@ -10,7 +10,11 @@ var lastTop = -1;
 var noOfRows = 0;
 var showFaceOverlay = true;
 var cl;
-
+$(document).ready(function() {
+	$.get('pretestQuestionnaire.html', function(response) {
+		$('#textContainer').html(response).enhanceWithin();
+	});
+});
 function startTimer() {
 	var today = new Date();
 	var h = today.getHours();
@@ -40,26 +44,32 @@ function loadMenu() {
 var pauseOverlay = false;
 window.onload = function() {
 	startTimer();
-	loadText(2);
 	loadMenu();
 	$(".ui-content").height($.mobile.getScreenHeight());
+//	debugVideoLoc = document.getElementById('webgazerVideoPresentation');
+//	webgazer.setStaticVideo
 	var leftDist = '0px';
+//	webgazer.setStaticVideo(video2);
+	webgazer.params.videoElementId = "webgazerVideoPresentation";
 	var setup = function() {
-		webgazer.params.videoElementId = "webgazerVideoFeed";
-		var video = document.getElementById('webgazerVideoFeed');
-		var video2 = document.getElementById('webgazerVideoPresentation');
-		video.style.display = 'none';
-		video.style.bottom = '0px';
-		video.style.left = leftDist;
-		video.style.position = 'absolute';
-		video.width = $(window).width();
-		video.height = $(window).height();
-		video.style.margin = '0px';
-		video.style.background = '#222222';
-		video.style.zIndex = '-1';
 		var width = Math.round($("#leftSidePanel").width());
 		var height = Math.round(width / 1.33);
-		video2.src = video.src;
+		webgazer.params.videoElementId = "webgazerVideoPresentation";
+//		var video = document.getElementById('webgazerVideoFeed');
+		var video2 = document.getElementById('webgazerVideoPresentation');
+//		video.style.display = 'block';
+//		video.style.bottom = '0px';
+//		video.style.right = '0px';
+//		video.style.top = '0px';
+//		video.style.left = leftDist;
+//		video.style.position = 'fixed';
+//		video.width = width;
+//		video.height = height;
+//		video.style.zIndex = '-1';
+		
+//		var tmpVSRC = video.src;
+//		video2.src = tmpVSRC;
+
 		video2.style.display = 'block';
 		video2.style.bottom = '0px';
 		video2.style.left = leftDist;
@@ -92,10 +102,10 @@ window.onload = function() {
 		faceOverlay.style.top = '59px';
 		faceOverlay.style.left = '107px';
 		faceOverlay.style.border = 'solid';
-		faceOverlay.style.zIndex = '22';
+		faceOverlay.style.zIndex = '23';
 
 		overlay.style.zIndex = '33';
-		document.getElementById("webGazerContainer").appendChild(video);
+//		document.getElementById("webGazerContainer").appendChild(video);
 		document.getElementById("webGazerContainer").appendChild(overlay);
 		document.getElementById("webGazerContainer").appendChild(faceOverlay);
 
@@ -109,6 +119,7 @@ window.onload = function() {
 		canvas.style.bottom = '0px';
 		cl = webgazer.getTracker().clm;
 		$("#webGazerContainer").trigger("create");
+//		cl.init();
 		// This function draw the face of the user frame.
 		function drawLoop() {
 			if (pauseOverlay)
@@ -146,15 +157,28 @@ window.onload = function() {
 		if (webgazer.isReady()) {
 			setup();
 		} else {
-			setTimeout(checkIfReady, 100);
+			setTimeout(checkIfReady, 500);
 		}
 	}
-	setTimeout(checkIfReady, 100);
+	setTimeout(checkIfReady, 500);
 
 };
 
-function eyeTrackerPS() {
-
+function submitPreTaskForm() {
+	$.ajax({
+		url : "REST/GetWS/QuestionnaireSubmit",
+		data : {
+			formElements : $("#questionnaireForm").serialize()
+		},
+		async : true,
+		contentType : "application/json",
+		type : 'POST',
+		dataType : "json",
+		success : function(data) {
+			return;
+		}
+	});
+	loadText(2);
 }
 
 window.onbeforeunload = function() {

@@ -1,212 +1,244 @@
 package app.deep.learning.rnn;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Random;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.datavec.api.records.reader.SequenceRecordReader;
-import org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader;
-import org.datavec.api.split.NumberedFileInputSplit;
-import org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator;
-import org.deeplearning4j.eval.Evaluation;
-import org.deeplearning4j.nn.conf.GradientNormalization;
+//import org.deeplearning4j.examples.rnn.shakespeare.CharacterIterator;
+import org.deeplearning4j.nn.api.Layer;
+import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
-import org.deeplearning4j.nn.conf.layers.LSTM;
+import org.deeplearning4j.nn.conf.Updater;
+import org.deeplearning4j.nn.conf.distribution.UniformDistribution;
+import org.deeplearning4j.nn.conf.layers.GravesLSTM;
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.nd4j.linalg.activations.Activation;
-import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
-import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
-import org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize;
-import org.nd4j.linalg.learning.config.Nesterovs;
-import org.nd4j.linalg.lossfunctions.LossFunctions;
-import org.nd4j.linalg.primitives.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
 /**
- * Sequence Classification Example Using a LSTM Recurrent Neural Network
+ * TODO 1. generate a few fake timeseries w labels (fraud, no-fraud) 2. setup
+ * the network 3. set the data load of the timeseries into the network .fit()
+ * method 4. output a report on how accurate the model is
+ * 
+ * @author josh
  *
- * This example learns how to classify univariate time series as belonging to one of six categories.
- * Categories are: Normal, Cyclic, Increasing trend, Decreasing trend, Upward shift, Downward shift
- *
- * Data is the UCI Synthetic Control Chart Time Series Data Set
- * Details:     https://archive.ics.uci.edu/ml/datasets/Synthetic+Control+Chart+Time+Series
- * Data:        https://archive.ics.uci.edu/ml/machine-learning-databases/synthetic_control-mld/synthetic_control.data
- * Image:       https://archive.ics.uci.edu/ml/machine-learning-databases/synthetic_control-mld/data.jpeg
- *
- * This example proceeds as follows:
- * 1. Download and prepare the data (in downloadUCIData() method)
- *    (a) Split the 600 sequences into train set of size 450, and test set of size 150
- *    (b) Write the data into a format suitable for loading using the CSVSequenceRecordReader for sequence classification
- *        This format: one time series per file, and a separate file for the labels.
- *        For example, train/features/0.csv is the features using with the labels file train/labels/0.csv
- *        Because the data is a univariate time series, we only have one column in the CSV files. Normally, each column
- *        would contain multiple values - one time step per row.
- *        Furthermore, because we have only one label for each time series, the labels CSV files contain only a single value
- *
- * 2. Load the training data using CSVSequenceRecordReader (to load/parse the CSV files) and SequenceRecordReaderDataSetIterator
- *    (to convert it to DataSet objects, ready to train)
- *    For more details on this step, see: http://deeplearning4j.org/usingrnns#data
- *
- * 3. Normalize the data. The raw data contain values that are too large for effective training, and need to be normalized.
- *    Normalization is conducted using NormalizerStandardize, based on statistics (mean, st.dev) collected on the training
- *    data only. Note that both the training data and test data are normalized in the same way.
- *
- * 4. Configure the network
- *    The data set here is very small, so we can't afford to use a large network with many parameters.
- *    We are using one small LSTM layer and one RNN output layer
- *
- * 5. Train the network for 40 epochs
- *    At each epoch, evaluate and print the accuracy and f1 on the test set
- *
- * @author Alex Black
  */
 public class RNN {
-    private static final Logger log = LoggerFactory.getLogger(RNN.class);
 
-    //'baseDir': Base directory for the data. Change this if you want to save the data somewhere else
-    private static File baseDir = new File("src/main/resources/uci/");
-    private static File baseTrainDir = new File(baseDir, "train");
-    private static File featuresDirTrain = new File(baseTrainDir, "features");
-    private static File labelsDirTrain = new File(baseTrainDir, "labels");
-    private static File baseTestDir = new File(baseDir, "test");
-    private static File featuresDirTest = new File(baseTestDir, "features");
-    private static File labelsDirTest = new File(baseTestDir, "labels");
+	public static void main(String[] args) throws Exception {
+		int lstmLayerSize = 200; // Number of units in each GravesLSTM layer
+		int miniBatchSize = 32; // Size of mini batch to use when training
+		int examplesPerEpoch = 50 * miniBatchSize; // i.e., how many examples to learn on between generating samples
+		int exampleLength = 100; // Length of each training example
+		int numEpochs = 30; // Total number of training + sample generation epochs
+		int nSamplesToGenerate = 4; // Number of samples to generate after each training epoch
+		int nCharactersToSample = 130; // Length of each sample to generate
+		String generationInitialization = null; // Optional character initialization; a random character is used if null
+		// Above is Used to 'prime' the LSTM with a character sequence to
+		// continue/complete.
+		// Initialization characters must all be in
+		// CharacterIterator.getMinimalCharacterSet() by default
+		Random rng = new Random(12345);
 
-    public static void main(String[] args) throws Exception {
-        downloadUCIData();
+		// Get a DataSetIterator that handles vectorization of text into something we
+		// can use to train
+		// our GravesLSTM network.
+		CharacterIterator iter = getShakespeareIterator(miniBatchSize, exampleLength, examplesPerEpoch);
+		int nOut = iter.totalOutcomes();
 
-        // ----- Load the training data -----
-        //Note that we have 450 training files for features: train/features/0.csv through train/features/449.csv
-        SequenceRecordReader trainFeatures = new CSVSequenceRecordReader();
-        trainFeatures.initialize(new NumberedFileInputSplit(featuresDirTrain.getAbsolutePath() + "/%d.csv", 0, 449));
-        SequenceRecordReader trainLabels = new CSVSequenceRecordReader();
-        trainLabels.initialize(new NumberedFileInputSplit(labelsDirTrain.getAbsolutePath() + "/%d.csv", 0, 449));
+		// Set up network configuration:
+		MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+				.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).iterations(1).learningRate(0.1)
+				.rmsDecay(0.95).seed(12345).regularization(true).l2(0.001).list()
+				.layer(0,
+						new GravesLSTM.Builder().nIn(iter.inputColumns()).nOut(lstmLayerSize).updater(Updater.RMSPROP)
+								.activation("tanh").weightInit(WeightInit.DISTRIBUTION)
+								.dist(new UniformDistribution(-0.08, 0.08)).build())
+				.layer(1,
+						new GravesLSTM.Builder().nIn(lstmLayerSize).nOut(lstmLayerSize).updater(Updater.RMSPROP)
+								.activation("tanh").weightInit(WeightInit.DISTRIBUTION)
+								.dist(new UniformDistribution(-0.08, 0.08)).build())
+				.layer(2, new RnnOutputLayer.Builder(LossFunction.MCXENT).activation("softmax") // MCXENT + softmax for
+																								// classification
+						.updater(Updater.RMSPROP).nIn(lstmLayerSize).nOut(nOut).weightInit(WeightInit.DISTRIBUTION)
+						.dist(new UniformDistribution(-0.08, 0.08)).build())
+				.pretrain(false).backprop(true).build();
 
-        int miniBatchSize = 10;
-        int numLabelClasses = 6;
-        DataSetIterator trainData = new SequenceRecordReaderDataSetIterator(trainFeatures, trainLabels, miniBatchSize, numLabelClasses,
-            false, SequenceRecordReaderDataSetIterator.AlignmentMode.ALIGN_END);
+		MultiLayerNetwork net = new MultiLayerNetwork(conf);
+		net.init();
+		net.setListeners(new ScoreIterationListener(1));
 
-        //Normalize the training data
-        DataNormalization normalizer = new NormalizerStandardize();
-        normalizer.fit(trainData);              //Collect training data statistics
-        trainData.reset();
+		// Print the number of parameters in the network (and for each layer)
+		Layer[] layers = net.getLayers();
+		int totalNumParams = 0;
+		for (int i = 0; i < layers.length; i++) {
+			int nParams = layers[i].numParams();
+			System.out.println("Number of parameters in layer " + i + ": " + nParams);
+			totalNumParams += nParams;
+		}
+		System.out.println("Total number of network parameters: " + totalNumParams);
 
-        //Use previously collected statistics to normalize on-the-fly. Each DataSet returned by 'trainData' iterator will be normalized
-        trainData.setPreProcessor(normalizer);
+		String[] initStrings = { "diary", "gozer", "are", "I", "dear" };
 
+		// Do training, and then generate and print samples from network
+		for (int i = 0; i < numEpochs; i++) {
+			net.fit(iter);
 
-        // ----- Load the test data -----
-        //Same process as for the training data.
-        SequenceRecordReader testFeatures = new CSVSequenceRecordReader();
-        testFeatures.initialize(new NumberedFileInputSplit(featuresDirTest.getAbsolutePath() + "/%d.csv", 0, 149));
-        SequenceRecordReader testLabels = new CSVSequenceRecordReader();
-        testLabels.initialize(new NumberedFileInputSplit(labelsDirTest.getAbsolutePath() + "/%d.csv", 0, 149));
+			System.out.println("--------------------");
+			System.out.println("Completed epoch " + i);
+			System.out.println("Sampling characters from network given initialization \""
+					+ (generationInitialization == null ? "" : generationInitialization) + "\"");
+			String[] samples = sampleCharactersFromNetwork(initStrings[i % initStrings.length], net, iter, rng,
+					nCharactersToSample, nSamplesToGenerate);
+			for (int j = 0; j < samples.length; j++) {
+				System.out.println("----- Sample " + j + " -----");
+				System.out.println("Init String: " + initStrings[i % initStrings.length]);
+				System.out.println(samples[j]);
+				System.out.println();
+			}
 
-        DataSetIterator testData = new SequenceRecordReaderDataSetIterator(testFeatures, testLabels, miniBatchSize, numLabelClasses,
-            false, SequenceRecordReaderDataSetIterator.AlignmentMode.ALIGN_END);
+			iter.reset(); // Reset iterator for another epoch
+		}
 
-        testData.setPreProcessor(normalizer);   //Note that we are using the exact same normalization process as the training data
+		System.out.println("\n\nExample complete");
+	}
 
+	/**
+	 * Downloads Shakespeare training data and stores it locally (temp directory).
+	 * Then set up and return a simple DataSetIterator that does vectorization based
+	 * on the text.
+	 * 
+	 * @param miniBatchSize
+	 *            Number of text segments in each training mini-batch
+	 * @param exampleLength
+	 *            Number of characters in each text segment.
+	 * @param examplesPerEpoch
+	 *            Number of examples we want in an 'epoch'.
+	 */
+	private static CharacterIterator getShakespeareIterator(int miniBatchSize, int exampleLength, int examplesPerEpoch)
+			throws Exception {
+		// The Complete Works of William Shakespeare
+		// 5.3MB file in UTF-8 Encoding, ~5.4 million characters
+		// https://www.gutenberg.org/ebooks/100
+		// String url = "https://s3.amazonaws.com/dl4j-distribution/pg100.txt";
+		// String tempDir = System.getProperty("java.io.tmpdir");
+		String fileLocation = "src/main/resources/rnn_sammer.txt"; // tempDir + "/Shakespeare.txt"; //Storage location
+																	// from downloaded file
+		File f = new File(fileLocation);
+		// URL resource = LSTM_SammerBot.class.getResource( fileLocation );
+		// System.out.println( resource );
+		// File f = Paths.get(resource.toURI()).toFile();
+		/*
+		 * if( !f.exists() ){ FileUtils.copyURLToFile(new URL(url), f);
+		 * System.out.println("File downloaded to " + f.getAbsolutePath()); } else {
+		 */
+		System.out.println("Using existing text file at " + f.getAbsolutePath());
+		// }
 
-        // ----- Configure the network -----
-        MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
-                .seed(123)    //Random number generator seed for improved repeatability. Optional.
-                .weightInit(WeightInit.XAVIER)
-                .updater(new Nesterovs(0.005))
-                .gradientNormalization(GradientNormalization.ClipElementWiseAbsoluteValue)  //Not always required, but helps with this data set
-                .gradientNormalizationThreshold(0.5)
-                .list()
-                .layer(0, new LSTM.Builder().activation(Activation.TANH).nIn(1).nOut(10).build())
-                .layer(1, new RnnOutputLayer.Builder(LossFunctions.LossFunction.MCXENT)
-                        .activation(Activation.SOFTMAX).nIn(10).nOut(numLabelClasses).build())
-                .pretrain(false).backprop(true).build();
+		if (!f.exists())
+			throw new IOException("File does not exist: " + fileLocation); // Download problem?
 
-        MultiLayerNetwork net = new MultiLayerNetwork(conf);
-        net.init();
+		char[] validCharacters = CharacterIterator.getMinimalCharacterSet(); // Which characters are allowed? Others
+																				// will be removed
+		return new CharacterIterator(fileLocation, Charset.forName("UTF-8"), miniBatchSize, exampleLength,
+				examplesPerEpoch, validCharacters, new Random(12345), true);
+	}
 
-        net.setListeners(new ScoreIterationListener(20));   //Print the score (loss function value) every 20 iterations
+	/**
+	 * Generate a sample from the network, given an (optional, possibly null)
+	 * initialization. Initialization can be used to 'prime' the RNN with a sequence
+	 * you want to extend/continue.<br>
+	 * Note that the initalization is used for all samples
+	 * 
+	 * @param initialization
+	 *            String, may be null. If null, select a random character as
+	 *            initialization for all samples
+	 * @param charactersToSample
+	 *            Number of characters to sample from network (excluding
+	 *            initialization)
+	 * @param net
+	 *            MultiLayerNetwork with one or more GravesLSTM/RNN layers and a
+	 *            softmax output layer
+	 * @param iter
+	 *            CharacterIterator. Used for going from indexes back to characters
+	 */
+	private static String[] sampleCharactersFromNetwork(String initialization, MultiLayerNetwork net,
+			CharacterIterator iter, Random rng, int charactersToSample, int numSamples) {
+		// Set up initialization. If no initialization: use a random character
+		if (initialization == null) {
+			initialization = String.valueOf(iter.getRandomCharacter());
+		}
 
+		// Create input for initialization
+		INDArray initializationInput = Nd4j.zeros(numSamples, iter.inputColumns(), initialization.length());
+		char[] init = initialization.toCharArray();
+		for (int i = 0; i < init.length; i++) {
+			int idx = iter.convertCharacterToIndex(init[i]);
+			for (int j = 0; j < numSamples; j++) {
+				initializationInput.putScalar(new int[] { j, idx, i }, 1.0f);
+			}
+		}
 
-        // ----- Train the network, evaluating the test set performance at each epoch -----
-        int nEpochs = 40;
-        String str = "Test set evaluation at epoch %d: Accuracy = %.2f, F1 = %.2f";
-        for (int i = 0; i < nEpochs; i++) {
-            net.fit(trainData);
+		StringBuilder[] sb = new StringBuilder[numSamples];
+		for (int i = 0; i < numSamples; i++)
+			sb[i] = new StringBuilder(initialization);
 
-            //Evaluate on the test set:
-            Evaluation evaluation = net.evaluate(testData);
-            log.info(String.format(str, i, evaluation.accuracy(), evaluation.f1()));
+		// Sample from network (and feed samples back into input) one character at a
+		// time (for all samples)
+		// Sampling is done in parallel here
+		net.rnnClearPreviousState();
+		INDArray output = net.rnnTimeStep(initializationInput);
+		output = output.tensorAlongDimension(output.size(2) - 1, 1, 0); // Gets the last time step output
 
-            testData.reset();
-            trainData.reset();
-        }
+		for (int i = 0; i < charactersToSample; i++) {
+			// Set up next input (single time step) by sampling from previous output
+			INDArray nextInput = Nd4j.zeros(numSamples, iter.inputColumns());
+			// Output is a probability distribution. Sample from this for each example we
+			// want to generate, and add it to the new input
+			for (int s = 0; s < numSamples; s++) {
+				double[] outputProbDistribution = new double[iter.totalOutcomes()];
+				for (int j = 0; j < outputProbDistribution.length; j++)
+					outputProbDistribution[j] = output.getDouble(s, j);
+				int sampledCharacterIdx = sampleFromDistribution(outputProbDistribution, rng);
 
-        log.info("----- Example Complete -----");
-    }
+				nextInput.putScalar(new int[] { s, sampledCharacterIdx }, 1.0f); // Prepare next time step input
+				sb[s].append(iter.convertIndexToCharacter(sampledCharacterIdx)); // Add sampled character to
+																					// StringBuilder (human readable
+																					// output)
+			}
 
+			output = net.rnnTimeStep(nextInput); // Do one time step of forward pass
+		}
 
-    //This method downloads the data, and converts the "one time series per line" format into a suitable
-    //CSV sequence format that DataVec (CsvSequenceRecordReader) and DL4J can read.
-    private static void downloadUCIData() throws Exception {
-        if (baseDir.exists()) return;    //Data already exists, don't download it again
+		String[] out = new String[numSamples];
+		for (int i = 0; i < numSamples; i++)
+			out[i] = sb[i].toString();
+		return out;
+	}
 
-        String url = "https://archive.ics.uci.edu/ml/machine-learning-databases/synthetic_control-mld/synthetic_control.data";
-        String data = IOUtils.toString(new URL(url));
+	/**
+	 * Given a probability distribution over discrete classes, sample from the
+	 * distribution and return the generated class index.
+	 * 
+	 * @param distribution
+	 *            Probability distribution over classes. Must sum to 1.0
+	 */
+	private static int sampleFromDistribution(double[] distribution, Random rng) {
+		double d = rng.nextDouble();
+		double sum = 0.0;
+		for (int i = 0; i < distribution.length; i++) {
+			sum += distribution[i];
+			if (d <= sum)
+				return i;
+		}
+		// Should never happen if distribution is a valid probability distribution
+		throw new IllegalArgumentException("Distribution is invalid? d=" + d + ", sum=" + sum);
+	}
 
-        String[] lines = data.split("\n");
-
-        //Create directories
-        baseDir.mkdir();
-        baseTrainDir.mkdir();
-        featuresDirTrain.mkdir();
-        labelsDirTrain.mkdir();
-        baseTestDir.mkdir();
-        featuresDirTest.mkdir();
-        labelsDirTest.mkdir();
-
-        int lineCount = 0;
-        List<Pair<String, Integer>> contentAndLabels = new ArrayList<>();
-        for (String line : lines) {
-            String transposed = line.replaceAll(" +", "\n");
-
-            //Labels: first 100 examples (lines) are label 0, second 100 examples are label 1, and so on
-            contentAndLabels.add(new Pair<>(transposed, lineCount++ / 100));
-        }
-
-        //Randomize and do a train/test split:
-        Collections.shuffle(contentAndLabels, new Random(12345));
-
-        int nTrain = 450;   //75% train, 25% test
-        int trainCount = 0;
-        int testCount = 0;
-        for (Pair<String, Integer> p : contentAndLabels) {
-            //Write output in a format we can read, in the appropriate locations
-            File outPathFeatures;
-            File outPathLabels;
-            if (trainCount < nTrain) {
-                outPathFeatures = new File(featuresDirTrain, trainCount + ".csv");
-                outPathLabels = new File(labelsDirTrain, trainCount + ".csv");
-                trainCount++;
-            } else {
-                outPathFeatures = new File(featuresDirTest, testCount + ".csv");
-                outPathLabels = new File(labelsDirTest, testCount + ".csv");
-                testCount++;
-            }
-
-            FileUtils.writeStringToFile(outPathFeatures, p.getFirst());
-            FileUtils.writeStringToFile(outPathLabels, p.getSecond().toString());
-        }
-    }
 }

@@ -1,255 +1,276 @@
 package app.datastream.eeg;
 
+import static com.eeg_server.experiment.oddball.FileUtils.NEW_LINE;
+
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-
-import com.google.gson.Gson;
-
-import app.AIengine.dataprepration.RecordData;
-import app.common.AccelerometerENT;
+import com.eeg_server.eegServer.EegData;
+import com.eeg_server.eegServer.MuseSignals;
+import com.eeg_server.eegServer.Type;
+import com.eeg_server.experiment.oddball.FileUtils;
+import com.eeg_server.oscP5.OscMessage;
+import com.eeg_server.oscP5.OscP5;
+import com.eeg_server.oscP5.OscProperties;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import app.common.MuseSignalEntity;
-import oscP5.*;
 
 public class MuseOscServer {
 	public static MuseSignalEntity EEG;
-	public static AccelerometerENT ACC;
-	public static OscP5 museServer;
 	public static boolean record;
-	private static HashMap<String, String> EEDData;
-	private static HashMap<String, Object> bandSessionData;
-	private static HashMap<String, Object> bandAbsData;
-	private static HashMap<String, Object> bandRelativeData;
+	private List<EegData> messages = Lists.newLinkedList();
+	Set<String> others = Sets.newHashSet();
+	private OscP5 oscP5;
+
+	public void startRecord() {
+		record = false;
+		if (oscP5 == null)
+			oscP5 = new OscP5(this, "localhost", 5003, OscProperties.UDP);
+	}
+
+	public void stopRecord() {
+		oscP5.dispose();
+	}
 
 	void oscEvent(OscMessage msg) {
-		if (EEG == null) {
-			EEG = new MuseSignalEntity();
-			ACC = new AccelerometerENT();
-			EEDData = new HashMap<>();
+		String name = msg.addrPattern();
+		Type type = Type.getValue(name);
 
-		}
-		if (msg.checkAddrPattern("/muse/fft")) {
-			for (int i = 0; i < 129; i++) {
-				System.out.print("EEG on channel " + i + ": " + msg.get(i).floatValue() + "\n");
+		prepareObjforUI(msg);
+		if (!record)
+			return;
+		long timetag = msg.timetag();
+		long serverCurrentTimestamp = System.currentTimeMillis();
+		switch (type) {
+		case OTHER:
+			String str = msg.addrPattern();
+			if (others.contains(str)) {
+				return;
 			}
-		}
-		if (msg.checkAddrPattern("/muse/eeg") == true) {
-			if (record) {
-				HashMap<String, Float> EEGTMP = new HashMap<String, Float>();
-				EEGTMP.put("1", msg.get(0).floatValue());
-				EEGTMP.put("2", msg.get(1).floatValue());
-				EEGTMP.put("3", msg.get(2).floatValue());
-				EEGTMP.put("4", msg.get(3).floatValue());
-				Gson g = new Gson();
-				RecordData.recordMainTask(g.toJson(EEGTMP), true, "RowEEG");
-			}
-			EEG.setEEG1(msg.get(0).floatValue());
-			EEG.setEEG2(msg.get(1).floatValue());
-			EEG.setEEG3(msg.get(2).floatValue());
-			EEG.setEEG4(msg.get(3).floatValue());
-		}
-		if (msg.checkAddrPattern("/muse/elements/low_freqs_absolute") == true) {
-			EEG.setLowFreqABS(getVal(msg));
-			if (record) {
-				HashMap<String, Float> tmp = new HashMap<String, Float>();
-				tmp.put("1", msg.get(0).floatValue());
-				tmp.put("2", msg.get(1).floatValue());
-				tmp.put("3", msg.get(2).floatValue());
-				tmp.put("4", msg.get(3).floatValue());
-				tmp.put("5", getVal(msg));
-				bandAbsData.put("l", tmp);
-			}
-		}
-		if (msg.checkAddrPattern("/muse/elements/delta_absolute") == true) {
-			EEG.setDeltaABS(getVal(msg));
-			if (record) 
-				bandAbsData.put("d", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/theta_absolute") == true) {
-			EEG.setTetaABS(getVal(msg));
-			if (record) 
-				bandAbsData.put("t", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/alpha_absolute") == true) {
-			EEG.setAlphaABS(getVal(msg));
-			if (record) 
-				bandAbsData.put("a", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/beta_absolute") == true) {
-			EEG.setBetaABS(getVal(msg));
-			if (record) 
-				bandAbsData.put("b", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/gamma_absolute") == true) {
-			EEG.setGammaABS(getVal(msg));
-			if (record) 
-				bandAbsData.put("g", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/low_freqs_relative") == true) {
-			EEG.setLowFreqR(getVal(msg));
-			if (record) 
-				bandRelativeData.put("l", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/delta_relative") == true) {
-			if (record) 
-				bandRelativeData.put("d", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/theta_relative") == true) {
-			EEG.setTetaR(getVal(msg));
-			if (record) 
-				bandRelativeData.put("t", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/alpha_relative") == true) {
-			EEG.setAlphaR(getVal(msg));
-			if (record) 
-				bandRelativeData.put("a", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/beta_relative") == true) {
-			EEG.setBetaR(getVal(msg));
-			if (record) 
-				bandRelativeData.put("b", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/gamma_relative") == true) {
-			EEG.setGammaR(getVal(msg));
-			if (record) 
-				bandRelativeData.put("g", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/delta_session_score") == true) {
-			EEG.set_delta(getVal(msg));
-			if (record) 
-				bandSessionData.put("d", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/theta_session_score") == true) {
-			EEG.set_teta(getVal(msg));
-			if (record) 
-				bandSessionData.put("t", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/alpha_session_score") == true) {
-			EEG.set_alpha(getVal(msg));
-			if (record) 
-				bandSessionData.put("a", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/beta_session_score") == true) {
-			EEG.set_beta(getVal(msg));
-			if (record) 
-				bandSessionData.put("b", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/gamma_session_score") == true) {
-			EEG.set_gamma(getVal(msg));
-			if (record) 
-				bandSessionData.put("g", recordTheBand(msg));
-		}
-		if (msg.checkAddrPattern("/muse/elements/horseshoe") == true) {
-			float[] tmp = { msg.get(0).floatValue(), msg.get(1).floatValue(), msg.get(2).floatValue(),
-					msg.get(3).floatValue() };
-			EEG.setHorseShoes(tmp);
-		}
-		if (msg.checkAddrPattern("/muse/batt") == true) {
-			EEG.setBattery(msg.get(0).intValue());
-			EEG.setTemprature(msg.get(3).intValue());
-		}
-		if (msg.checkAddrPattern("/muse/elements/touching_forehead") == true) {
-			if (msg.get(0).intValue() == 1) {
-				EEG.setForeheadConneted(true);
-			} else
-				EEG.setForeheadConneted(false);
-		}
-		if (msg.checkAddrPattern("/muse/drlref") == true) {
-			EEG.setDRL(msg.get(0).floatValue());
-			EEG.setREF(msg.get(1).floatValue());
-		}
-		if (msg.checkAddrPattern("/muse/acc") == true) {
-			AccelerometerENT newACC = new AccelerometerENT(msg.get(0).floatValue(), msg.get(1).floatValue(),
-					msg.get(2).floatValue());
-			if (!ACC.equals(newACC)) {
-				ACC = newACC;
-				EEG.setACC_X(msg.get(0).floatValue());
-				EEG.setACC_Y(msg.get(1).floatValue());
-				EEG.setACC_Z(msg.get(2).floatValue());
-				EEDData.put("X", Math.round(msg.get(0).floatValue()) + "");
-				EEDData.put("Y", Math.round(msg.get(1).floatValue()) + "");
-				EEDData.put("Z", Math.round(msg.get(2).floatValue()) + "");
-				ObjectMapper mapper = new ObjectMapper();
-
-				try {
-					if (record)
-						RecordData.recordMainTask(mapper.writeValueAsString(EEDData), true, "AccelerometerREC");
-				} catch (JsonGenerationException e) {
-					e.printStackTrace();
-				} catch (JsonMappingException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		if (msg.checkAddrPattern("/muse/gyro") == true) {
-			System.out.println(msg.get(0).floatValue());
-			System.out.println(msg.get(1).floatValue());
-			System.out.println(msg.get(2).floatValue());
-		}
-		if (msg.checkAddrPattern("/muse/elements/blink") == true) {
-			if (msg.get(0).intValue() == 1) {
-				EEG.setBlink(true);
-			} else
-				EEG.setBlink(false);
-		}
-		if (msg.checkAddrPattern("/muse/elements/experimental/concentration") == true) {
-			EEG.setConcentration(msg.get(0).floatValue() * 100);
-		}
-		if (msg.checkAddrPattern("/muse/elements/experimental/mellow") == true) {
-			EEG.setMeditation(msg.get(0).floatValue() * 100);
-		}
-		if (record) {
-			EEG.setIMG("");
-			EEG.setACC_X(0);
-			EEG.setACC_Y(0);
-			EEG.setACC_Z(0);
-			try {
-				ObjectMapper mapper = new ObjectMapper();
-				mapper.writeValueAsString(EEG);
-				RecordData.recordMainTask(mapper.writeValueAsString(EEG), true, "EEGREC");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
+			others.add(str);
+			return;
+		case HORSE_SHOE:
+			// System.out.println("signal quality:" + MuseSignals.asString(msg,
+			// Type.HORSE_SHOE));
+			return;
+		case STRICT:
+			return;
+		case QUANTIZATION_EEG:
+		case ALPHA_ABSOLUTE:
+			EegData alphaAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(alphaAbs);
+			return;
+		case BETA_ABSOLUTE:
+			EegData BAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(BAbs);
+			return;
+		case THETA_ABSOLUTE:
+			EegData TAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(TAbs);
+			return;
+		case DELTA_ABSOLUTE:
+			EegData DAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(DAbs);
+			return;
+		case GAMMA_ABSOLUTE:
+			EegData GAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(GAbs);
+			return;
+		case ALPHA_RELATIVE:
+			EegData alphaRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(alphaRel);
+			return;
+		case BETA_RELATIVE:
+			EegData BRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(BRel);
+			return;
+		case THETA_RELATIVE:
+			EegData TRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(TRel);
+			return;
+		case DELTA_RELATIVE:
+			EegData DRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(DRel);
+			return;
+		case GAMMA_RELATIVE:
+			EegData GRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(GRel);
+			return;
+		case ALPHA_SESSION:
+			EegData alphaSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(alphaSes);
+			return;
+		case BETA_SESSION:
+			EegData BSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(BSes);
+			return;
+		case THETA_SESSION:
+			EegData TSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(TSes);
+			return;
+		case DELTA_SESSION:
+			EegData DSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(DSes);
+			return;
+		case GAMMA_SESSION:
+			EegData GSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(GSes);
+			return;
+		case ACCELEROMETER:
+			EegData dataAcc = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(dataAcc);
+			return;
+		case FFT0:
+			EegData fft0 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(fft0);
+			return;
+		case FFT1:
+			EegData fft1 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(fft1);
+			return;
+		case FFT2:
+			EegData fft2 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(fft2);
+			return;
+		case FFT3:
+			EegData fft3 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(fft3);
+			return;
+		default:
+			EegData data = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			messages.add(data);
 		}
 	}
 
-	private Map<String, Float> recordTheBand(OscMessage msg) {
-		Map<String, Float> tmp = new HashMap<String, Float>();
-		tmp.put("1", msg.get(0).floatValue());
-		tmp.put("2", msg.get(1).floatValue());
-		tmp.put("3", msg.get(2).floatValue());
-		tmp.put("4", msg.get(3).floatValue());
-		tmp.put("5", getVal(msg));
-		return tmp;
+	private static final String HEADER = "Timetag Ntp,Server Timestamp,Raw Timetag, Raw Server Timestamp,Data Type,data";
+
+	public void dumpResults(String filename) {
+		if (!record && messages.size() <= 0)
+			return;
+		try {
+			final List<EegData> tmp = messages;
+			messages.removeAll(tmp);
+			for (EegData eegData : tmp) {
+				String fileName = FileUtils.resolve(eegData.getType() + ".csv").toString();
+				File f = new File(fileName);
+				boolean newFile = false;
+				if (!f.exists()) {
+					f.createNewFile();
+					newFile = true;
+				}
+				FileWriter writer = new FileWriter(fileName, true);
+				if (newFile) {
+					writer.write(HEADER);
+					writer.write(NEW_LINE);
+				}
+				writer.append(FileUtils.formatCsvLine(eegData));
+				writer.append(NEW_LINE);
+				writer.flush();
+				writer.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	void prepareObjforUI(OscMessage msg) {
+		if (EEG == null) {
+			EEG = new MuseSignalEntity();
+		}
+		try {
+//			if (msg.checkAddrPattern("/muse/eeg") == true) {
+//				EEG.setEEG1(msg.get(0).floatValue());
+//				EEG.setEEG2(msg.get(1).floatValue());
+//				EEG.setEEG3(msg.get(2).floatValue());
+//				EEG.setEEG4(msg.get(3).floatValue());
+//			}
+			if (msg.checkAddrPattern("/muse/elements/delta_session_score") == true) {
+				EEG.setDeltaABS(getVal(msg));
+			}
+			if (msg.checkAddrPattern("/muse/elements/theta_session_score") == true) {
+				EEG.setTetaABS(getVal(msg));
+			}
+			if (msg.checkAddrPattern("/muse/elements/alpha_session_score") == true) {
+				EEG.setAlphaABS(getVal(msg));
+			}
+			if (msg.checkAddrPattern("/muse/elements/beta_session_score") == true) {
+				EEG.setBetaABS(getVal(msg));
+			}
+			if (msg.checkAddrPattern("/muse/elements/gamma_session_score") == true) {
+				EEG.setGammaABS(getVal(msg));
+			}
+			if (msg.checkAddrPattern("/muse/elements/horseshoe") == true) {
+				float[] tmpHS = { msg.get(0).floatValue(), msg.get(1).floatValue(), msg.get(2).floatValue(),
+						msg.get(3).floatValue() };
+				EEG.setHorseShoes(tmpHS);
+			}
+			if (msg.checkAddrPattern("/muse/batt") == true) {
+				EEG.setBattery(msg.get(0).intValue());
+				EEG.setTemprature(msg.get(3).intValue());
+			}
+			if (msg.checkAddrPattern("/muse/elements/touching_forehead") == true) {
+				if (msg.get(0).intValue() == 1) {
+					EEG.setForeheadConneted(true);
+				} else
+					EEG.setForeheadConneted(false);
+			}
+			if (msg.checkAddrPattern("/muse/drlref") == true) {
+				EEG.setDRL(msg.get(0).floatValue());
+				EEG.setREF(msg.get(1).floatValue());
+			}
+			if (msg.checkAddrPattern("/muse/acc") == true) {
+				EEG.setACC_X(msg.get(0).floatValue());
+				EEG.setACC_Y(msg.get(1).floatValue());
+				EEG.setACC_Z(msg.get(2).floatValue());
+			}
+			if (msg.checkAddrPattern("/muse/elements/blink") == true) {
+				if (msg.get(0).intValue() == 1) {
+					EEG.setBlink(true);
+				} else
+					EEG.setBlink(false);
+			}
+			if (msg.checkAddrPattern("/muse/elements/experimental/concentration") == true) {
+				EEG.setConcentration(msg.get(0).floatValue());
+				EEG.setRNN(msg.get(0).floatValue());
+				System.out.println("Conc > " + msg.get(0).floatValue());
+			}
+			if (msg.checkAddrPattern("/muse/elements/experimental/mellow") == true) {
+				EEG.setMeditation(msg.get(0).floatValue());
+				System.out.println("Melo > " + msg.get(0).floatValue());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private float getVal(OscMessage msg) {
 		float val = 0;
 		int counter = 0;
-		if (msg.get(0) != null && msg.get(0).floatValue() != 0) {
+		if (msg.get(0) != null && msg.get(0).floatValue() != 0 && !Float.isNaN(msg.get(0).floatValue())) {
 			val += Math.abs(msg.get(0).floatValue());
 			counter++;
 		}
-		if (msg.get(1) != null && msg.get(1).floatValue() != 0) {
+		if (msg.get(1) != null && msg.get(1).floatValue() != 0 && !Float.isNaN(msg.get(1).floatValue())) {
 			val += Math.abs(msg.get(1).floatValue());
 			counter++;
 		}
-		if (msg.get(2) != null && msg.get(2).floatValue() != 0) {
+		if (msg.get(2) != null && msg.get(2).floatValue() != 0 && !Float.isNaN(msg.get(2).floatValue())) {
 			val += Math.abs(msg.get(2).floatValue());
 			counter++;
 		}
-		if (msg.get(3) != null && msg.get(3).floatValue() != 0) {
+		if (msg.get(3) != null && msg.get(3).floatValue() != 0 && !Float.isNaN(msg.get(3).floatValue())) {
 			val += Math.abs(msg.get(3).floatValue());
 			counter++;
 		}
 		val = val / counter;
-		return Float.parseFloat(val + "");
+		if (Float.isNaN(val))
+			return 0;
+		else
+			return val;
 	}
 }

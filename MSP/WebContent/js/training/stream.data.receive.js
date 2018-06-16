@@ -1,5 +1,5 @@
 var wsUri = "ws://" + document.location.host
-		+ "/MSP/EEGStreamSocket/5";
+		+ "/MSP/VideoStreamSocket/5";
 var websocket;
 var isStreaming = false;
 
@@ -46,20 +46,20 @@ function plotSignals(data) {
 	updateBar("X", Math.abs(data.ACC_X + 1)/4000);
 	updateBar("Y", Math.abs(data.ACC_Y + 1)/4000);
 	updateBar("Z", Math.abs(data.ACC_Z + 1)/4000);
-	updateBar("D", medi / 100);
-	updateBar("F", conc / 100);
+	updateBar("D", data.Meditation);
+	updateBar("F", data.Concentration);
 	updateBar("delta", data.deltaABS);
 	updateBar("alpha", data.alphaABS);
 	updateBar("gamma", data.gammaABS);
 	updateBar("theta", data.tetaABS);
 	updateBar("beta", data.betaABS);
-	if(data.predictions!=null)
-	updateBar("MWPrediction", $("#MW").val());
-//	$("#MW").val(data.predictions.MW);
+	$("#MW").val(data.RNN)
+	if(data.RNN!=null)
+	updateBar("RNNPrediction", $("#MW").val());
 	if (data.foreheadConneted)
-		$("#hs3").css('background-color', 'green');
+		$("#hs3").attr('style', 'background: green !important');
 	else
-		$("#hs3").css('background-color', 'red');
+		$("#hs3").attr('style', 'background: red !important');
 	if (data.blink)
 		$("#blinkContainer").css('visibility', 'visible');
 	else
@@ -68,11 +68,12 @@ function plotSignals(data) {
 	if(data.horseShoes!=null)
 	for ( var int = 0; int < data.horseShoes.length; int++) {
 		if (int < 2) {
-			$("#hs" + (int + 1)).css('background-color',
-					getColor(data.horseShoes[int]));
+// $("#hs" + (int + 1)).css('background-color',
+// getColor(data.horseShoes[int]), 'important');
+			$("#hs" + (int + 1)).attr('style', 'background: '+getColor(data.horseShoes[int])+' !important');
 		} else if (int >= 2) {
-			$("#hs" + (int + 2)).css('background-color',
-					getColor(data.horseShoes[int]));
+			$("#hs" + (int + 2)).attr('style', 'background: '+getColor(data.horseShoes[int])+' !important');
+// $('#elem').attr('style', 'width: 100px !important');
 		}
 	}
 }
@@ -111,7 +112,7 @@ var canvas2, context2, v, w, h;
 
 function connectToHeadband() {
 	 connectToTheSocket();
-	 $.get("http://localhost:8090/MSP/REST/GetWS/ConnectHeadband");
+	 $.get("REST/GetWS/ConnectHeadband");
 }
 
 function connectToTheSocket() {
@@ -130,31 +131,8 @@ function connectToTheSocket() {
 	};
 }
 
-function convertToBinary(dataURI) {
-	var byteString = atob(dataURI.split(',')[1]);
-	var ab = new ArrayBuffer(byteString.length);
-	var ia = new Uint8Array(ab);
-	for ( var i = 0; i < byteString.length; i++) {
-		ia[i] = byteString.charCodeAt(i);
-	}
-	var bb = new Blob([ ab ]);
-	return bb;
-}
-
-function convertToBinary(dataURI) {
-	var byteString = atob(dataURI.split(',')[1]);
-	var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
-	var ab = new ArrayBuffer(byteString.length);
-	var ia = new Uint8Array(ab);
-	for ( var i = 0; i < byteString.length; i++) {
-		ia[i] = byteString.charCodeAt(i);
-	}
-	var bb = new Blob([ ab ]);
-	return bb;
-}
-
 function finishRecording() {
-	$.get("http://localhost:8090/MSP/REST/GetWS/StopHeadband");
+	$.get("REST/GetWS/StopHeadband");
 	if(websocket!= null && websocket.readyState !== websocket.CLOSED) {
 		websocket.close();
 	}

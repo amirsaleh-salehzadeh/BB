@@ -27,6 +27,7 @@ import oscP5.OscP5;
 public class GetService extends Application {
 	// REST/GetWS/.....
 	private static ThreadEEGReceiver t;
+	private static Thread th;
 
 	@POST
 	@Path("/PostFaceFeatures")
@@ -42,23 +43,38 @@ public class GetService extends Application {
 		return "";
 	}
 
+	@POST
+	@Path("/QuestionnaireSubmit")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes({ MediaType.APPLICATION_FORM_URLENCODED, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })
+	public String questionnaireSubmit(Form form) {
+		List<String> mwl = form.get("formElements");
+		if (mwl != null && mwl.size() > 0 && mwl.get(0).length() > 0)
+			RecordData.recordMainTask(mwl.get(0), true, "Questionnaire");
+		return "";
+	}
+
 	static MuseOscServer museOscServer;
 	public static MuseSignalEntity EEG;
 	OscP5 museServer;
+
 	@GET
 	@Path("/ConnectHeadband")
 	@Produces("application/json")
 	public String connectHeadband() {
-		if (t == null) {
+		if (th == null) {
 			t = new ThreadEEGReceiver();
 			t.killer = true;
-			Thread ts = new Thread(t);
-			ts.setName("EEGStream");
-			ts.setDaemon(true);
-			ts.start();
+			th = new Thread(t);
+			th.setName("EEGStream");
+			th.setDaemon(true);
+			th.start();
 		}
 		if (t != null) {
 			t.stopHeadband = false;
+		}
+		if (museOscServer == null) {
+			museOscServer = t.museOscServer;
 		}
 		String json = "";
 		return json;
@@ -68,14 +84,17 @@ public class GetService extends Application {
 	@Path("/StartRecording")
 	@Produces("application/json")
 	public String startRecording() {
-		if (t == null) {
+		if (th == null) {
 			t = new ThreadEEGReceiver();
-			Thread ts = new Thread(t);
-			ts.setName("EEGStream");
-			ts.setDaemon(true);
-			ts.start();
+			th = new Thread(t);
+			th.setName("EEGStream");
+			th.setDaemon(true);
+			th.start();
 		}
-		museOscServer.record = true;
+		if (museOscServer == null) {
+			museOscServer = t.museOscServer;
+		}
+		MuseOscServer.record = true;
 		return "";
 	}
 
@@ -87,10 +106,14 @@ public class GetService extends Application {
 			t.stopHeadband = true;
 			t.killer = false;
 		}
+		museOscServer.stopRecord();
 		museOscServer.record = false;
 		museOscServer = null;
 		t = null;
-		String json = "[]";
+		th.destroy();
+		th.stop();
+		th = null;
+		String json = "";
 		return json;
 	}
 
