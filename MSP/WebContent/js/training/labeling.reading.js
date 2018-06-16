@@ -55,10 +55,10 @@ function intervalTimeStamp() {
 	labelElems.push({
 		m : parseInt($("#mood").val())
 	});
-	var currentFFPositions = cl.getCurrentPrediction();
+	var currentFFPositions = cl.getCurrentPosition();
 	for (var i = 0; i < currentFFPositions.length; i++) {
 		var pos = {
-			x : currentFFPositions[i][0],
+			x : currentFFPositions[i][0]	,
 			y : currentFFPositions[i][1]
 		}
 		faceFeatures.push(pos);

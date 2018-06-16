@@ -94,7 +94,7 @@ public class GetService extends Application {
 		if (museOscServer == null) {
 			museOscServer = t.museOscServer;
 		}
-		MuseOscServer.record = true;
+		museOscServer.record = true;
 		return "";
 	}
 

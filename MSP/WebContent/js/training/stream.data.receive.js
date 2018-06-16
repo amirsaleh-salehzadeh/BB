@@ -1,5 +1,7 @@
-var wsUri = "ws://" + document.location.host
+var wsUri = "wss://" + document.location.host
 		+ "/MSP/VideoStreamSocket/5";
+//var wsUri = document.location.host
+//+ "/MSP/VideoStreamSocket/5";
 var websocket;
 var isStreaming = false;
 

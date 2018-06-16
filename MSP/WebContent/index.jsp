@@ -34,14 +34,14 @@
 <script type="text/javascript" src="js/training/stream.data.receive.js"></script>
 </head>
 <body>
-	<div data-role="page" id="mainPage" data-theme="a">
+	<div data-role="page" id="mainPage" data-theme="b">
 		<div data-role="header" data-fullscreen="true"
 			data-position-fixed="true" data-position="fixed">
 			<div data-role="controlgroup" data-type="horizontal"
 				style="margin-left: 75px; margin-top: 5px;">
 				<a href="#" data-role="button"><img alt="battery"
-					src="images/batt.png" width="44%"></a> <a href="#" data-role="button"
-					style="color: green;" id="battVal">--%</a> <a
+					src="images/batt.png" width="44%"></a> <a href="#"
+					data-role="button" style="color: green;" id="battVal">--%</a> <a
 					href="#" data-role="button" id="hs1" class="horseShoes"
 					style="color: white;">TP9</a> <a href="#" data-role="button"
 					id="hs2" class="horseShoes" style="color: white;">Fp1</a><a
@@ -66,12 +66,12 @@
 					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Pause</a>
 				<a href="#" data-role="button" onclick="finishRecording()"
 					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">End</a>
-				<a href="#" data-role="button" style="padding: 0; margin: 0;"><img
+				<a href="#" data-role="button" style="padding: 0;"> <img alt="blink"
+					id="blinkContainer" style="visibility: hidden;"
+					src="images/eye.png" width="63%">
+				</a> <a href="#" data-role="button" style="padding: 0; margin: 0;"><img
 					alt="" src="images/th.jpg" style="width: 15%;"> CCI <span
-					id="timerSpan"></span></a> <a href="#" data-role="button"
-					id="blinkContainer" style="visibility: hidden;"> <img
-					alt="blink" src="images/eye.png" width="35%">
-				</a>
+					id="timerSpan"></span></a>
 			</div>
 		</div>
 		<div data-role="panel" data-position="left" data-display="overlay"
@@ -233,13 +233,13 @@
 			<input type="hidden" name="M" id="mood" value="0"
 				class="classificationLabelValue">
 		</form>
-		
-		
-		
-<!-- 		CALIBRATION DIV -->
-		
-		
-		
+
+
+
+		<!-- 		CALIBRATION DIV -->
+
+
+
 		<div class="calibrationDiv">
 			<input type="button" class="Calibration" id="Pt1"
 				style="display: none;" data-role="none"> <input
