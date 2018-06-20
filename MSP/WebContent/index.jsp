@@ -41,7 +41,7 @@
 				style="margin-left: 75px; margin-top: 5px;">
 				<a href="#" data-role="button"><img alt="battery"
 					src="images/batt.png" width="44%"></a> <a href="#"
-					data-role="button" style="color: green;" id="battVal">--%</a> <a
+					data-role="button" style="color: green;" id="battVal">--%</a><a
 					href="#" data-role="button" id="hs1" class="horseShoes"
 					style="color: white;">TP9</a> <a href="#" data-role="button"
 					id="hs2" class="horseShoes" style="color: white;">Fp1</a><a
@@ -54,11 +54,11 @@
 					class="ui-btn ui-icon-bars ui-btn-icon-notext ui-shadow ui-corner-all">&nbsp;</a>
 				<a href="#" data-role="button" onclick="Restart()"
 					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Calibrate</a>
-				<a href="#" data-role="button"
-					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye"
-					onclick="eyeTrackerPS()" data-icon="eye">Eye Tracker
-					Pause/Start</a><a href="#" data-role="button"
-					onclick="connectToHeadband()"
+				<!-- 				<a href="#" data-role="button" -->
+				<!-- 					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye" -->
+				<!-- 					onclick="eyeTrackerPS()" data-icon="eye">Eye Tracker -->
+				<!-- 					Pause/Start</a> -->
+				<a href="#" data-role="button" onclick="connectToHeadband()"
 					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Connect</a>
 				<a href="#" data-role="button" onclick="readingStart()"
 					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-arrow-d-r">Start</a>
@@ -66,8 +66,8 @@
 					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Pause</a>
 				<a href="#" data-role="button" onclick="finishRecording()"
 					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">End</a>
-				<a href="#" data-role="button" style="padding: 0;"> <img alt="blink"
-					id="blinkContainer" style="visibility: hidden;"
+				<a href="#" data-role="button" style="padding: 0;"> <img
+					alt="blink" id="blinkContainer" style="visibility: hidden;"
 					src="images/eye.png" width="63%">
 				</a> <a href="#" data-role="button" style="padding: 0; margin: 0;"><img
 					alt="" src="images/th.jpg" style="width: 15%;"> CCI <span
@@ -84,6 +84,14 @@
 				style="position: fixed; bottom: 11px; right: 11px;"
 				class="ui-shadow ui-btn ui-corner-all ui-btn-inline ui-btn-icon-left ui-icon-star"
 				onclick="openMWpopup()">Action</a>
+			<div class="hprogress-mw large" style="background-color: #FF0000;">
+				<div class=".hprogress-bar slideInDown" role="progressbar"
+					aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"
+					id="RNNPrediction"></div>
+				<div class="text-center p-absolute">
+					<i class="fa">RNN</i>
+				</div>
+			</div>
 		</div>
 		<div data-role="footer" id="footerBar" data-position="fixed"
 			class="ui-bar">
@@ -122,14 +130,6 @@
 					</div>
 				</div>
 				<div class="ui-block-d">
-					<div class="hprogress large" style="background-color: #FF0000;">
-						<div class="hprogress-bar slideInDown" role="progressbar"
-							aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"
-							id="RNNPrediction"></div>
-						<div class="text-center p-absolute">
-							<i class="fa">RNN</i>
-						</div>
-					</div>
 					<div class="hprogress large" style="background-color: #FF0000;">
 						<div class="hprogress-bar slideInDown" role="progressbar"
 							aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"
@@ -221,16 +221,19 @@
 		</div>
 		<form id="dataClassificationLabels">
 			<!-- 		MIND WANDERING -->
-			<input type="hidden" name="MW" id="MW" value="0"
-				class="classificationLabelValue">
-			<!-- 		MIND WANDERING -->
-			<input type="hidden" name="G" id="gender" value="1"
+			<input type="hidden" name="focus" id="focus" value="1"
 				class="classificationLabelValue">
 			<!-- 		DISTRACTION REASON -->
 			<input type="hidden" name="DR" id="dr" value="0"
 				class="classificationLabelValue">
+			<!-- 		IS LOOKING AT SCREEN -->
+			<input type="hidden" name="screen" id="screen" value="1"
+				class="classificationLabelValue">
 			<!-- 		MOOD -->
 			<input type="hidden" name="M" id="mood" value="0"
+				class="classificationLabelValue">
+			<!-- 		ACTIVITY -->
+			<input type="hidden" name="A" id="activity" value="0"
 				class="classificationLabelValue">
 		</form>
 

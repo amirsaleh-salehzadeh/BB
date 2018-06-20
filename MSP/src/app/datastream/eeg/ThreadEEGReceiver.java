@@ -6,9 +6,6 @@ import java.util.ArrayList;
 import javax.websocket.Session;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.eeg_server.experiment.ExperimentType;
-import com.eeg_server.oscP5.OscProperties;
-
 import app.AIengine.dataprepration.DataPreparationAccell;
 import app.common.MuseSignalEntity;
 import app.webservices.GetServiceStreamSocketMediator;
@@ -43,7 +40,7 @@ public class ThreadEEGReceiver implements Runnable {
 		while (killer) {
 			try {
 				Thread.sleep(30);
-				museOscServer.dumpResults(ExperimentType.SimpleRecord.name());
+//				museOscServer.dumpResults(ExperimentType.SimpleRecord.name());
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

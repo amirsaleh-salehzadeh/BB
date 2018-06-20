@@ -11,7 +11,6 @@ from keras.callbacks import CSVLogger, TensorBoard, EarlyStopping
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import GridSearchCV
 
-
 import time
 
 import tensorflow as tf
@@ -71,37 +70,33 @@ def get_filepaths(mainfolder):
     testing_filepaths:  file paths to be used for testing
     """
     training_filepaths = {}
-    testing_filepaths  = {}
+    testing_filepaths = {}
     folders = os.listdir(mainfolder)
     for folder in folders:
         fpath = mainfolder + "/" + folder
         if os.path.isdir(fpath) and "MODEL" not in folder:
             filenames = os.listdir(fpath)
-            for filename in filenames[:int(round(0.8*len(filenames)))]:
+            for filename in filenames[:int(round(0.8 * len(filenames)))]:
                 fullpath = fpath + "/" + filename
                 training_filepaths[fullpath] = folder
-            for filename1 in filenames[int(round(0.8*len(filenames))):]:
+            for filename1 in filenames[int(round(0.8 * len(filenames))):]:
                 fullpath1 = fpath + "/" + filename1
                 testing_filepaths[fullpath1] = folder
     return training_filepaths, testing_filepaths
 
+
 def get_labels(mainfolder):
     """ Creates a dictionary of labels for each unique type of motion """
-    labels = {}
-    label = 0
-    for folder in os.listdir(mainfolder):
-        fpath = mainfolder + "/" + folder
-        if os.path.isdir(fpath) and "MODEL" not in folder:
-            labels[folder] = label
-            label += 1
+    labels = {0, 1}
     return labels
+
 
 def get_data(fp, labels, folders, norm, std, center):
     """
     Creates a dataframe for the data in the filepath and creates a one-hot
     encoding of the file's label
     """
-    data = pd.read_csv(filepath_or_buffer=fp, sep=' ', names = ["X", "Y", "Z"])
+    data = pd.read_csv(filepath_or_buffer=fp, sep=',', names=["x", "y", "z"])
     if norm and not std:
         normed_data = norm_data(data)
     elif std and not norm:
@@ -109,13 +104,14 @@ def get_data(fp, labels, folders, norm, std, center):
     elif center and not norm and not std:
         cent_data = subtract_mean(data)
 
-    one_hot = np.zeros(14)
+    one_hot = np.zeros(2)
     file_dir = folders[fp]
     label = labels[file_dir]
     one_hot[label] = 1
     return normed_data, one_hot, label
 
 # Normalizes the data by removing the mean
+
 
 def subtract_mean(input_data):
     # Subtract the mean along each column
@@ -134,24 +130,27 @@ def norm_data(data):
     n_data = mms.transform(c_data)
     return n_data
 
+
 def standardize(data):
     c_data = subtract_mean(data)
-    std_data = c_data/ pd.std(c_data)
+    std_data = c_data / pd.std(c_data)
     return std_data
+
 
 def vectorize(normed):
     """
     Uses a sliding window to create a list of (randomly-ordered) 300-timestep
     sublists for each feature.
     """
-    sequences = [normed[i:i+300] for i in range(len(normed)-300)]
+    sequences = [normed[i:i + 50] for i in range(len(normed) - 50)]
     shuffle(sequences)
     sequences = np.array(sequences)
     return sequences
 
+
 def build_inputs(files_list, accel_labels, file_label_dict, norm_bool, std_bool, center_bool):
-    X_seq    = []
-    y_seq    = []
+    X_seq = []
+    y_seq = []
     labels = []
     for path in files_list:
         normed_data, target, target_label = get_data(path, accel_labels, file_label_dict, norm_bool, std_bool, center_bool)
@@ -163,6 +162,7 @@ def build_inputs(files_list, accel_labels, file_label_dict, norm_bool, std_bool,
     X_ = np.array(X_seq)
     y_ = np.array(y_seq)
     return X_, y_, labels
+
 
 # Builds the LSTM model
 def build_model():
@@ -176,27 +176,27 @@ def build_model():
     # print("Compilation time: {0:.2f} - {0:.2f} = {0:.2f}".format(time.time(), start, time.time() - start))
 
     model = Sequential()
-    model.add(LSTM(128, activation='tanh', recurrent_activation='hard_sigmoid',\
-                    use_bias=True, kernel_initializer='glorot_uniform',\
-                    recurrent_initializer='orthogonal',\
-                    unit_forget_bias=True, kernel_regularizer=None,\
-                    recurrent_regularizer=None,\
-                    bias_regularizer=None, activity_regularizer=None,\
-                    kernel_constraint=None, recurrent_constraint=None,\
-                    bias_constraint=None, dropout=0.0, recurrent_dropout=0.0,\
-                    implementation=1, return_sequences=True, return_state=False,\
-                    go_backwards=False, stateful=False, unroll=False,\
+    model.add(LSTM(128, activation='tanh', recurrent_activation='hard_sigmoid', \
+                    use_bias=True, kernel_initializer='glorot_uniform', \
+                    recurrent_initializer='orthogonal', \
+                    unit_forget_bias=True, kernel_regularizer=None, \
+                    recurrent_regularizer=None, \
+                    bias_regularizer=None, activity_regularizer=None, \
+                    kernel_constraint=None, recurrent_constraint=None, \
+                    bias_constraint=None, dropout=0.0, recurrent_dropout=0.0, \
+                    implementation=1, return_sequences=True, return_state=False, \
+                    go_backwards=False, stateful=False, unroll=False, \
                     input_shape=(300, 3)))
     model.add(Dropout(0.5))
-    model.add(LSTM(128, activation='tanh', recurrent_activation='hard_sigmoid',\
-                    use_bias=True, kernel_initializer='glorot_uniform',\
-                    recurrent_initializer='orthogonal',\
-                    unit_forget_bias=True, kernel_regularizer=None,\
-                    recurrent_regularizer=None,\
-                    bias_regularizer=None, activity_regularizer=None,\
+    model.add(LSTM(128, activation='tanh', recurrent_activation='hard_sigmoid', \
+                    use_bias=True, kernel_initializer='glorot_uniform', \
+                    recurrent_initializer='orthogonal', \
+                    unit_forget_bias=True, kernel_regularizer=None, \
+                    recurrent_regularizer=None, \
+                    bias_regularizer=None, activity_regularizer=None, \
                     kernel_constraint=None, recurrent_constraint=None, \
-                    bias_constraint=None, dropout=0.0, recurrent_dropout=0.0,\
-                    implementation=1, return_sequences=False, return_state=False,\
+                    bias_constraint=None, dropout=0.0, recurrent_dropout=0.0, \
+                    implementation=1, return_sequences=False, return_state=False, \
                     go_backwards=False, stateful=False, unroll=False,
                     input_shape=(300, 3)))
     model.add(Dropout(0.5))
@@ -208,6 +208,7 @@ def build_model():
     print("Compilation time: ", time.time(), '-', start)
 
     return model
+
 
 def compute_accuracy(predictions, y_labels):
     predicted_labels = []
@@ -223,17 +224,15 @@ def compute_accuracy(predictions, y_labels):
     print("Predicted {} out of {} correctly for an Accuracy of {}%".format(correct, len(predicted_labels), accuracy))
     return
 
+
 if __name__ == '__main__':
 
-    if os.path.isdir("/Users/xtian"):
-        mainpath = "/Users/xtian/Documents/Quinn Research Group/accelerometer_research/HMP_Dataset"
-    else:
-        mainpath = "C:\HMP_Dataset"
+    mainpath = "C:/RecordingFiles"
 
-    activity_labels                  = get_labels(mainpath)
-    training_dict, testing_dict      = get_filepaths(mainpath)
-    training_files                   = list(training_dict.keys())
-    testing_files                    = list(testing_dict.keys())
+    activity_labels = get_labels(mainpath)
+    training_dict, testing_dict = get_filepaths(mainpath)
+    training_files = {"C:/RecordingFiles/1/labeled.csv" , "C:/RecordingFiles/2/labeled.csv"}
+    testing_files = {"C:/RecordingFiles/3/labeled.csv"}
 
     # build training inputs and labels
     X_train, y_train, train_labels = build_inputs(
@@ -242,14 +241,14 @@ if __name__ == '__main__':
         training_dict,
         True, False, False)
     # build tesing inputs and labels
-    X_test, y_test, test_labels    = build_inputs(
+    X_test, y_test, test_labels = build_inputs(
         training_files,
         activity_labels,
         training_dict,
         True, False, False)
 
     # build and run model
-    epochs = 5 #200
+    epochs = 5  # 200
     for test in range(5):
         model = build_model()
         # model = KerasClassifier(build_fn=build_model, verbose=0)
@@ -281,7 +280,7 @@ if __name__ == '__main__':
                                         verbose=0, mode='auto')
 
         model.fit(X_train, y_train, epochs=epochs,
-            validation_split=0.2, callbacks=[csv_logger, early_stop]) #, tb_logs])
+            validation_split=0.2, callbacks=[csv_logger, early_stop])  # , tb_logs])
 
         pred = model.predict(X_test)
         print("Predicted one-hot values: {} \n Actual one-hot values: {}".format(pred, y_test))

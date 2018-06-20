@@ -39,12 +39,6 @@ function getColor(l) {
 
 function plotSignals(data) {
 	isStreaming = true;
-	var conc = Math.round(data.Concentration);
-	var medi = Math.round(data.Meditation);
-	if (conc == null)
-		conc = 0;
-	if (medi == null)
-		medi = 0;
 	updateBar("X", Math.abs(data.ACC_X + 1)/4000);
 	updateBar("Y", Math.abs(data.ACC_Y + 1)/4000);
 	updateBar("Z", Math.abs(data.ACC_Z + 1)/4000);
@@ -55,9 +49,9 @@ function plotSignals(data) {
 	updateBar("gamma", data.gammaABS);
 	updateBar("theta", data.tetaABS);
 	updateBar("beta", data.betaABS);
-	$("#MW").val(data.RNN)
+	$("#focus").val(data.RNN)
 	if(data.RNN!=null)
-	updateBar("RNNPrediction", $("#MW").val());
+	updateBar("RNNPrediction", $("#focus").val());
 	if (data.foreheadConneted)
 		$("#hs3").attr('style', 'background: green !important');
 	else
@@ -70,19 +64,11 @@ function plotSignals(data) {
 	if(data.horseShoes!=null)
 	for ( var int = 0; int < data.horseShoes.length; int++) {
 		if (int < 2) {
-// $("#hs" + (int + 1)).css('background-color',
-// getColor(data.horseShoes[int]), 'important');
 			$("#hs" + (int + 1)).attr('style', 'background: '+getColor(data.horseShoes[int])+' !important');
 		} else if (int >= 2) {
 			$("#hs" + (int + 2)).attr('style', 'background: '+getColor(data.horseShoes[int])+' !important');
-// $('#elem').attr('style', 'width: 100px !important');
 		}
 	}
-}
-function measureAccel(inpt) {
-	var res = 0;
-	res = (inpt + 2000) / 20;
-	return res;
 }
 
 function binaryToString(str) {
@@ -138,4 +124,5 @@ function finishRecording() {
 	if(websocket!= null && websocket.readyState !== websocket.CLOSED) {
 		websocket.close();
 	}
+	readingDone();
 }

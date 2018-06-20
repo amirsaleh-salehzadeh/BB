@@ -36,10 +36,13 @@ public class GetService extends Application {
 	public String postFaceFeatures(Form form) {
 		List<String> mwl = form.get("mindWanderingLabels");
 		List<String> ffs = form.get("faceFeatures");
-		if (ffs != null && ffs.size() > 0 && ffs.get(0).length() > 0)
+		if (ffs != null && ffs.size() > 0 && ffs.get(0).length() > 3)
 			RecordData.recordMainTask(ffs.get(0), true, "FaceFeaturesREC");
-		if (mwl != null && mwl.size() > 0 && mwl.get(0).length() > 0)
+		if (mwl != null && mwl.size() > 0 && mwl.get(0).length() > 0) {
 			RecordData.recordMainTask(mwl.get(0), true, "0_LabelsREC");
+			Object[] tmp = mwl.get(0).split(",");
+			museOscServer.labels = tmp;
+		}
 		return "";
 	}
 
@@ -70,9 +73,9 @@ public class GetService extends Application {
 			th.setDaemon(true);
 			th.start();
 		}
-//		if (t != null) {
-//			t.stopHeadband = false;
-//		}
+		// if (t != null) {
+		// t.stopHeadband = false;
+		// }
 		if (museOscServer == null) {
 			museOscServer = t.museOscServer;
 		}
@@ -103,7 +106,6 @@ public class GetService extends Application {
 	@Produces("application/json")
 	public String stopHeadband() {
 		if (t != null) {
-//			t.stopHeadband = true;
 			t.killer = false;
 		}
 		museOscServer.stopRecord();

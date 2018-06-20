@@ -40,7 +40,7 @@ public class ExcelDataStorage {
 				FileWriter writer = new FileWriter("C:\\RecordingFiles\\" + fileName + ".csv", append);
 				try {
 					String time = System.currentTimeMillis() + "";
-					writer.append((time).substring(time.length() - 7, time.length()) + "__"
+					writer.append((time).substring(time.length() - 7, time.length()) + ","
 							 + input.get(j).toString() + "\n");
 					writer.flush();
 					writer.close();

@@ -22,6 +22,17 @@
 	background: #000; /* fallback for old browsers */
 	bottom: 0;
 	top: 0;
+	float: right;
+}
+
+.hprogress-mw {
+	height: 100%;
+	width: 64px;
+	opacity: .3;
+	border: transparent;
+	display: inline-block;
+	position: relative;
+	margin-right: 22px;
 }
 
 .fa {

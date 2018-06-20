@@ -1,36 +1,32 @@
 package app.datastream.eeg;
 
-import static com.eeg_server.experiment.oddball.FileUtils.NEW_LINE;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
-import com.eeg_server.eegServer.EegData;
-import com.eeg_server.eegServer.MuseSignals;
-import com.eeg_server.eegServer.Type;
-import com.eeg_server.experiment.oddball.FileUtils;
-import com.eeg_server.oscP5.OscMessage;
-import com.eeg_server.oscP5.OscP5;
-import com.eeg_server.oscP5.OscProperties;
-import com.google.common.collect.Lists;
+import app.common.EEG.Type;
 import com.google.common.collect.Sets;
 import app.common.MuseSignalEntity;
+import app.common.EEG.EegData;
+import app.common.utils.FileUtils;
+import oscP5.OscMessage;
+import oscP5.OscP5;
+import oscP5.OscProperties;
 
 public class MuseOscServer {
 	public static MuseSignalEntity EEG;
 	public static boolean record;
-	private List<EegData> messages = Lists.newLinkedList();
 	Set<String> others = Sets.newHashSet();
 	private OscP5 oscP5;
+	public static Object[] labels;
 
 	public void startRecord() {
 		record = false;
 		if (oscP5 == null)
 			oscP5 = new OscP5(this, "localhost", 5003, OscProperties.UDP);
+		if (labels == null)
+			labels = new Object[3];
 	}
 
 	public void stopRecord() {
@@ -40,7 +36,7 @@ public class MuseOscServer {
 	void oscEvent(OscMessage msg) {
 		String name = msg.addrPattern();
 		Type type = Type.getValue(name);
-
+//		msg.addArguments(labels);
 		prepareObjforUI(msg);
 		if (!record)
 			return;
@@ -54,125 +50,119 @@ public class MuseOscServer {
 			}
 			others.add(str);
 			return;
-		case HORSE_SHOE:
-			// System.out.println("signal quality:" + MuseSignals.asString(msg,
-			// Type.HORSE_SHOE));
-			return;
-		case STRICT:
-			return;
-		case QUANTIZATION_EEG:
 		case ALPHA_ABSOLUTE:
 			EegData alphaAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(alphaAbs);
+			dumpResults(alphaAbs);
 			return;
 		case BETA_ABSOLUTE:
 			EegData BAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(BAbs);
+			dumpResults(BAbs);
 			return;
 		case THETA_ABSOLUTE:
 			EegData TAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(TAbs);
+			dumpResults(TAbs);
 			return;
 		case DELTA_ABSOLUTE:
 			EegData DAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(DAbs);
+			dumpResults(DAbs);
 			return;
 		case GAMMA_ABSOLUTE:
 			EegData GAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(GAbs);
+			dumpResults(GAbs);
 			return;
 		case ALPHA_RELATIVE:
 			EegData alphaRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(alphaRel);
+			dumpResults(alphaRel);
 			return;
 		case BETA_RELATIVE:
 			EegData BRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(BRel);
+			dumpResults(BRel);
 			return;
 		case THETA_RELATIVE:
 			EegData TRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(TRel);
+			dumpResults(TRel);
 			return;
 		case DELTA_RELATIVE:
 			EegData DRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(DRel);
+			dumpResults(DRel);
 			return;
 		case GAMMA_RELATIVE:
 			EegData GRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(GRel);
+			dumpResults(GRel);
 			return;
 		case ALPHA_SESSION:
 			EegData alphaSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(alphaSes);
+			dumpResults(alphaSes);
 			return;
 		case BETA_SESSION:
 			EegData BSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(BSes);
+			dumpResults(BSes);
 			return;
 		case THETA_SESSION:
 			EegData TSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(TSes);
+			dumpResults(TSes);
 			return;
 		case DELTA_SESSION:
 			EegData DSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(DSes);
+			dumpResults(DSes);
 			return;
 		case GAMMA_SESSION:
 			EegData GSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(GSes);
+			dumpResults(GSes);
 			return;
 		case ACCELEROMETER:
 			EegData dataAcc = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(dataAcc);
+			dumpResults(dataAcc);
 			return;
 		case FFT0:
 			EegData fft0 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(fft0);
+			dumpResults(fft0);
 			return;
 		case FFT1:
 			EegData fft1 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(fft1);
+			dumpResults(fft1);
 			return;
 		case FFT2:
 			EegData fft2 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(fft2);
+			dumpResults(fft2);
 			return;
 		case FFT3:
 			EegData fft3 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(fft3);
+			dumpResults(fft3);
 			return;
 		default:
 			EegData data = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			messages.add(data);
+			dumpResults(data);
 		}
 	}
 
-	private static final String HEADER = "Timestamp,Data";
+	private static final String HEADER = "Timestamp";
+	private static final String NEW_LINE = "\n";
 
-	public void dumpResults(String filename) {
-		if (!record && messages.size() <= 0)
+	public void dumpResults(EegData eegData) {
+		if (!record)
 			return;
 		try {
-			final List<EegData> tmp = messages;
-			messages = new ArrayList<EegData>();
-			for (final EegData eegData : tmp) {
-				String fileName = FileUtils.resolve(eegData.getType() + ".csv").toString();
-				File f = new File(fileName);
-				boolean newFile = false;
-				if (!f.exists()) {
-					f.createNewFile();
-					newFile = true;
-				}
-				FileWriter writer = new FileWriter(fileName, true);
-				if (newFile) {
-					writer.write(HEADER);
-					writer.write(NEW_LINE);
-				}
-				writer.append(FileUtils.formatCsvLine(eegData));
-				writer.append(NEW_LINE);
-				writer.flush();
-				writer.close();
+			String fileName = FileUtils.resolve(eegData.getType() + ".csv").toString();
+			File f = new File(fileName);
+			boolean newFile = false;
+			if (!f.exists()) {
+				f.createNewFile();
+				newFile = true;
 			}
+			FileWriter writer = new FileWriter(fileName, true);
+			if (newFile) {
+				String header = HEADER;
+				for (int i = 0; i < eegData.getArguments().length; i++) {
+					header += "," + eegData.getType() + i;
+				}
+				writer.write(header);
+				writer.write(NEW_LINE);
+			}
+			writer.append(FileUtils.formatCsvLine(eegData));
+			writer.append(NEW_LINE);
+			writer.flush();
+			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

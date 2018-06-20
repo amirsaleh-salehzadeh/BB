@@ -152,7 +152,8 @@ window.onload = function() {
 				if (data != null) {
 					evaluateTheGazedPosition(data, clock);
 				}
-			}).begin().showPredictionPoints(true);
+			}).begin();
+	
 	function checkIfReady() {
 		if (webgazer.isReady()) {
 			setup();
