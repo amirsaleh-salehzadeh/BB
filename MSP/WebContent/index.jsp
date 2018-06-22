@@ -37,6 +37,9 @@
 	<div data-role="page" id="mainPage" data-theme="b">
 		<div data-role="header" data-fullscreen="true"
 			data-position-fixed="true" data-position="fixed">
+			<a href="#leftSidePanel"
+					data-role="button" id="leftSideMenuBTN" role="button"
+					class="ui-btn ui-icon-bars ui-btn-icon-notext ui-shadow ui-corner-all ui-btn-left">&nbsp;</a>
 			<div data-role="controlgroup" data-type="horizontal"
 				style="margin-left: 75px; margin-top: 5px;">
 				<a href="#" data-role="button"><img alt="battery"
@@ -49,9 +52,7 @@
 					style="color: white;">&nbsp;</a> <a href="#" data-role="button"
 					id="hs4" class="horseShoes" style="color: white;">Fp2</a> <a
 					href="#" data-role="button" id="hs5" class="horseShoes"
-					style="color: white;">TP10</a> <a href="#leftSidePanel"
-					data-role="button" id="leftSideMenuBTN" role="button"
-					class="ui-btn ui-icon-bars ui-btn-icon-notext ui-shadow ui-corner-all">&nbsp;</a>
+					style="color: white;">TP10</a> 
 				<a href="#" data-role="button" onclick="Restart()"
 					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Calibrate</a>
 				<!-- 				<a href="#" data-role="button" -->
@@ -74,7 +75,7 @@
 					id="timerSpan"></span></a>
 			</div>
 		</div>
-		<div data-role="panel" data-position="left" data-display="overlay"
+		<div data-role="panel" data-position="left" data-display="push"
 			id="leftSidePanel" class="ui-bar"></div>
 		<div role="main" class="ui-content" id="pageContents" data-theme="c">
 			<canvas id="plotting_canvas" width="100%" height="100%"

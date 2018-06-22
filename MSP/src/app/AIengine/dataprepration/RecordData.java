@@ -32,7 +32,7 @@ public class RecordData {
 	public static int outTimer = 0;
 
 	public static void main(String[] arString) {
-		prepareObjects("C:\\RecordingFiles\\1");
+		prepareObjects("C:\\RecordingFiles\\");
 		// labelTheRows(null, 3559316);
 	}
 
@@ -61,19 +61,11 @@ public class RecordData {
 			mapLabels.put(Integer.parseInt(vals[0]), line);
 		} else {
 			try {
-				File f = new File("C:\\RecordingFiles\\3\\labeled.csv");
-				boolean newFile = false;
+				File f = new File("C:\\RecordingFiles\\labeled"+fileName);
 				if (!f.exists()) {
 					f.createNewFile();
-					newFile = true;
 				}
-				FileWriter writer = new FileWriter("C:\\RecordingFiles\\3\\labeled.csv", true);
-				if (newFile) {
-					String header = "time,x,y,z,label";
-					writer.write(header);
-					writer.write("\n");
-				}
-				System.out.println(line);
+				FileWriter writer = new FileWriter("C:\\RecordingFiles\\labeled"+fileName, true);
 				writer.append(line);
 				writer.append("\n");
 				writer.flush();
