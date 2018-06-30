@@ -1,0 +1,85 @@
+html, body {
+	height: 600px !important;
+	min-width: 333px !important;
+	overflow: hidden;
+	overflow-y: auto; 
+}
+/* Outer circle, tick-circles and spokes */
+#chart circle.outer {
+	stroke: #aaa;
+	stroke-dasharray: 4, 4;
+}
+
+#chart .tick-circles circle {
+	stroke: #ddd;
+	stroke-dasharray: 2, 2;
+}
+
+#chart .spokes line {
+	stroke: #666;
+	stroke-width: 0.2;
+}
+
+#chart {
+	font-family: "Helvetica Neue", Helvetica, sans-serif;
+	font-size: 14px;
+}
+
+#chart path {
+	fill: none;
+}
+
+#chart .layer-1 path {
+	fill: white !important;
+	opacity: 0.3;
+	stroke-width: 2px;
+	stroke: #999;
+}
+/* Axis */
+#chart .axis text {
+	font-size: 11px;
+	fill: #ddd;
+}
+
+#chart .axis path {
+	stroke: #999;
+	shape-rendering: crispEdges;
+}
+
+#chart .axis line {
+	stroke: #999;
+	shape-rendering: crispEdges;
+}
+
+/* Labels */
+#chart .labels text {
+	fill: #ddd;
+	font-size: 10px;
+	font-weight: 500;
+}
+
+.ui-page-theme-a {
+	color: white !important;
+	text-shadow: none !important;
+}
+
+.ui-listview {
+	margin: 0 !important;
+}
+
+.ui-listview>.ui-li-static {
+	padding: 0;
+}
+
+#mainPage, #pageContents {
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	position: fixed;
+	bottom: 0px;
+	top: 0px;
+	right: 0px;
+	left: 0px;
+	overflow: hidden;
+	overflow-y: auto; 
+}

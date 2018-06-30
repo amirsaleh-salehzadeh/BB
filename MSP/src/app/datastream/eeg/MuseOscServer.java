@@ -145,20 +145,10 @@ public class MuseOscServer {
 		try {
 			String fileName = FileUtils.resolve(eegData.getType() + ".csv").toString();
 			File f = new File(fileName);
-			boolean newFile = false;
 			if (!f.exists()) {
 				f.createNewFile();
-				newFile = true;
 			}
 			FileWriter writer = new FileWriter(fileName, true);
-			if (newFile) {
-				String header = HEADER;
-				for (int i = 0; i < eegData.getArguments().length; i++) {
-					header += "," + eegData.getType() + i;
-				}
-				writer.write(header);
-				writer.write(NEW_LINE);
-			}
 			writer.append(FileUtils.formatCsvLine(eegData));
 			writer.append(NEW_LINE);
 			writer.flush();

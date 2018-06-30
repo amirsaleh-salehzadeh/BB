@@ -1,0 +1,36 @@
+{
+  "manifest_version": 2,
+  "name": "My Mood Friend",
+  "description": "Cognitive Computer Interface",
+  "version": "1.0",
+  "browser_action": {
+	    "default_icon": "images/logo.png",
+	    "default_popup": "popup.html"
+  },
+  "background": {
+	    "persistent": false,
+	    "scripts": ["jquery.js", "main.js"]
+	  },
+  "icons": {
+	    "16": "images/logo.png",
+	    "32": "images/logo.png",
+	    "48": "images/logo.png",
+	    "128": "images/logo.png"
+  },
+  "permissions": [
+		"http://*/*",
+		"https://*/*",
+		"contentSettings", 
+		"tabs",
+		"declarativeContent", 
+		"storage"
+	],
+	"web_accessible_resources": [
+		"*"
+	],
+	"content_security_policy": "script-src 'self' 'unsafe-eval' https://localhost:8443/* http://localhost; object-src 'self'",
+	 "content_scripts": [{
+	     "js": ["jquery.js"],
+	     "matches": ["http://*/*", "https://*/*"]
+	   }]
+}

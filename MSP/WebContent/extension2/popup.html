@@ -1,0 +1,26 @@
+<html>
+<head>
+<style type="text/css">
+iframe {
+	overflow-y: scroll;
+}
+</style>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript">
+function drawLoop() {
+	requestAnimFrame(drawLoop);
+	$('#appFrame').attr('src', "https://localhost:8443/MSP/extension/index.html?eeg1=");
+}
+
+$(document).ready(function(){
+	drawLoop();
+});
+</script>
+<script src="http://10.0.0.27:8085/socket.io/socket.io.js"></script>
+</head>
+<body style="width: 333px; height: 600px; margin: 0 !important;">
+	<iframe src="https://localhost:8443/MSP/extension/index.html"
+		scrolling="yes" id="appFrame" width="333px" height="600px" frameborder="0"
+		allow="microphone; camera;"> </iframe>
+</body>
+</html>

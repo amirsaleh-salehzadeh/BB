@@ -31,10 +31,8 @@ public class ExcelDataStorage {
 			if (!f.exists())
 				f.mkdir();
 			f = new File("C:\\RecordingFiles\\" + fileName + ".csv");
-			boolean newFile = false;
 			if (!f.exists()) {
 				f.createNewFile();
-				newFile = true;
 			}
 			for (int j = 0; j < input.size(); j++) {
 				FileWriter writer = new FileWriter("C:\\RecordingFiles\\" + fileName + ".csv", append);

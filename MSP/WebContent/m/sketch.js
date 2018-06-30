@@ -127,9 +127,6 @@ var preloadImg = null;
 
 
 function setup() {
-
-	
-
 	var parentContainer = select('#chart');
 	preloadImg.parent('chart');
 	preloadImg.position(0.5*parentContainer.width,0.5*canvasHeight);
@@ -143,9 +140,9 @@ function setup() {
 		console.log('using dummy data');
 		muse = museData().dummyData();
 	} else {
-		var museAddress = 'http://localhost:8090/MSP';
-		console.log('trying to connect to muse on ' + museAddress);
-		muse = museData().connection(museAddress);
+		var serverAdd = 'http://10.0.0.27';
+		console.log('trying to connect to muse on ' + serverAdd);
+		muse = museData().connection(serverAdd, 8085);
 	}
 
 	//listen to the messages we are interested in 
