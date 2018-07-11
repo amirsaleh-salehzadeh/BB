@@ -5,54 +5,54 @@ html, body {
 	overflow-y: auto; 
 }
 /* Outer circle, tick-circles and spokes */
-#chart circle.outer {
+#chartBandWidths circle.outer {
 	stroke: #aaa;
 	stroke-dasharray: 4, 4;
 }
 
-#chart .tick-circles circle {
+#chartBandWidths .tick-circles circle {
 	stroke: #fff;
 	stroke-dasharray: 2, 2;
 }
 
-#chart .spokes line {
+#chartBandWidths .spokes line {
 	stroke: #aaa;
 	stroke-width: 0.2;
 }
 
-#chart {
+#chartBandWidths {
 	font-family: "Helvetica Neue", Helvetica, sans-serif;
 	font-size: 14px;
 }
 
-#chart path {
+#chartBandWidths path {
 	fill: none;
 }
 
-#chart .layer-1 path {
+#chartBandWidths .layer-1 path {
 	fill: white !important;
 	opacity: 0.3;
 	stroke-width: 2px;
 	stroke: #999;
 }
 /* Axis */
-#chart .axis text {
+#chartBandWidths .axis text {
 	font-size: 11px;
 	fill: #fff;
 }
 
-#chart .axis path {
+#chartBandWidths .axis path {
 	stroke: #999;
 	shape-rendering: crispEdges;
 }
 
-#chart .axis line {
+#chartBandWidths .axis line {
 	stroke: #999;
 	shape-rendering: crispEdges;
 }
 
 /* Labels */
-#chart .labels text {
+#chartBandWidths .labels text {
 	fill: #fff;
 	font-size: 11px;
 	font-weight: 500;
@@ -96,3 +96,11 @@ html, body {
 .cls-2 {
 	fill: none;
 }
+
+#chartEEGs, #chartEEGs canvas {
+	height: 111px;
+	max-width: 333px;
+	width: 333px;
+}
+
+

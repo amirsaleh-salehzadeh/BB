@@ -3,6 +3,7 @@ var cl;
 var pauseOverlay = false;
 window.onload = function() {
 	var leftDist = '0px';
+//	$("#connectToMuseBTN").on('click', connectToMuse);
 	var setup = function() {
 		var width = 333;
 		var height = Math.round(width / 1.33);
@@ -70,21 +71,21 @@ window.onload = function() {
 		drawLoop();
 		// evaluateAccuracy();
 	};
-//	webgazer.setRegression('ridge').setTracker('clmtrackr').setGazeListener(
-//			function(data, clock) {
-//				if (data != null) {
-//					return;
-//				}
-//			}).begin();
-//
-//	function checkIfReady() {
-//		if (webgazer.isReady()) {
-//			setup();
-//		} else {
-//			setTimeout(checkIfReady, 500);
-//		}
-//	}
-//	setTimeout(checkIfReady, 500);
+	// webgazer.setRegression('ridge').setTracker('clmtrackr').setGazeListener(
+	// function(data, clock) {
+	// if (data != null) {
+	// return;
+	// }
+	// }).begin();
+	//
+	// function checkIfReady() {
+	// if (webgazer.isReady()) {
+	// setup();
+	// } else {
+	// setTimeout(checkIfReady, 500);
+	// }
+	// }
+	// setTimeout(checkIfReady, 500);
 };
 
 // function drawLoop() {
@@ -125,3 +126,62 @@ function Restart() {
 	$("#leftSidePanel").panel("close");
 	$("#Accuracy").trigger("create");
 }
+
+var percentColors = [ {
+	pct : 0.0,
+	color : {
+		r : 0xff,
+		g : 0x00,
+		b : 0
+	}
+}, {
+	pct : 0.5,
+	color : {
+		r : 0xff,
+		g : 0xff,
+		b : 0
+	}
+}, {
+	pct : 1.0,
+	color : {
+		r : 0x00,
+		g : 0xff,
+		b : 0
+	}
+} ];
+
+var getColorForPercentage = function(pct) {
+	for (var i = 1; i < percentColors.length - 1; i++) {
+		if (pct < percentColors[i].pct) {
+			break;
+		}
+	}
+	var lower = percentColors[i - 1];
+	var upper = percentColors[i];
+	var range = upper.pct - lower.pct;
+	var rangePct = (pct - lower.pct) / range;
+	var pctLower = 1 - rangePct;
+	var pctUpper = rangePct;
+	var color = {
+		r : Math.floor(lower.color.r * pctLower + upper.color.r * pctUpper),
+		g : Math.floor(lower.color.g * pctLower + upper.color.g * pctUpper),
+		b : Math.floor(lower.color.b * pctLower + upper.color.b * pctUpper)
+	};
+	return 'rgb(' + [ color.r, color.g, color.b ].join(',') + ')';
+	// or output as hex if preferred
+}
+
+var requestAnimFrame = (function() {
+	return window.requestAnimationFrame
+			|| window.webkitRequestAnimationFrame
+			|| window.mozRequestAnimationFrame
+			|| window.oRequestAnimationFrame
+			|| window.msRequestAnimationFrame
+			|| function(/* function FrameRequestCallback */callback, /*
+																		 * DOMElement
+																		 * Element
+																		 */
+					element) {
+				return window.setTimeout(callback, 1000 / 60);
+			};
+})();

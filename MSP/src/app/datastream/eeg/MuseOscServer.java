@@ -21,6 +21,12 @@ public class MuseOscServer {
 	private OscP5 oscP5;
 	public static Object[] labels;
 
+	public static void main(String[] args) {
+		MuseOscServer m = new MuseOscServer();
+		m.startRecord();
+		record = true;
+	}
+
 	public void startRecord() {
 		record = false;
 		if (oscP5 == null)
@@ -36,8 +42,8 @@ public class MuseOscServer {
 	void oscEvent(OscMessage msg) {
 		String name = msg.addrPattern();
 		Type type = Type.getValue(name);
-//		msg.addArguments(labels);
-		prepareObjforUI(msg);
+		// msg.addArguments(labels);
+		// prepareObjforUI(msg);
 		if (!record)
 			return;
 		long timetag = msg.timetag();
@@ -48,91 +54,21 @@ public class MuseOscServer {
 			if (others.contains(str)) {
 				return;
 			}
-			others.add(str);
+			// others.add(str);
 			return;
-		case ALPHA_ABSOLUTE:
-			EegData alphaAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(alphaAbs);
-			return;
-		case BETA_ABSOLUTE:
-			EegData BAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(BAbs);
-			return;
-		case THETA_ABSOLUTE:
-			EegData TAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(TAbs);
-			return;
-		case DELTA_ABSOLUTE:
-			EegData DAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(DAbs);
-			return;
-		case GAMMA_ABSOLUTE:
-			EegData GAbs = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(GAbs);
-			return;
-		case ALPHA_RELATIVE:
-			EegData alphaRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(alphaRel);
-			return;
-		case BETA_RELATIVE:
-			EegData BRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(BRel);
-			return;
-		case THETA_RELATIVE:
-			EegData TRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(TRel);
-			return;
-		case DELTA_RELATIVE:
-			EegData DRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(DRel);
-			return;
-		case GAMMA_RELATIVE:
-			EegData GRel = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(GRel);
-			return;
-		case ALPHA_SESSION:
-			EegData alphaSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(alphaSes);
-			return;
-		case BETA_SESSION:
-			EegData BSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(BSes);
-			return;
-		case THETA_SESSION:
-			EegData TSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(TSes);
-			return;
-		case DELTA_SESSION:
-			EegData DSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(DSes);
-			return;
-		case GAMMA_SESSION:
-			EegData GSes = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(GSes);
-			return;
+		case HORSE_SHOE:
+			System.out.println(msg.get(0).floatValue() + " " + msg.get(1).floatValue() + " " + msg.get(2).floatValue()
+					+ " " + msg.get(3).floatValue());
 		case ACCELEROMETER:
 			EegData dataAcc = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
 			dumpResults(dataAcc);
 			return;
-		case FFT0:
-			EegData fft0 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(fft0);
-			return;
-		case FFT1:
-			EegData fft1 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(fft1);
-			return;
-		case FFT2:
-			EegData fft2 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(fft2);
-			return;
-		case FFT3:
-			EegData fft3 = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(fft3);
+		case EEG:
+			EegData eeg = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
+			dumpResults(eeg);
 			return;
 		default:
-			EegData data = new EegData(type.name(), timetag, serverCurrentTimestamp, msg.arguments());
-			dumpResults(data);
+			return;
 		}
 	}
 

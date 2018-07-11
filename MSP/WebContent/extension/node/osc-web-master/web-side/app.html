@@ -1,48 +1,57 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
-<html> <head>
+<html>
+<head>
 <title></title>
 </head>
 
 <body>
-<p>Connect your OSC app/device at port 3333 to send messages to this
-page.<br /><br />Configure your OSC app/device to listen at port 3334
-to messages I send from this page.</p>
+	<p>
+		Connect your OSC app/device at port 3333 to send messages to this
+		page.<br />
+		<br />Configure your OSC app/device to listen at port 3334 to
+		messages I send from this page.
+	</p>
 
-<hr />
+	<hr />
 
-Received from an OSC app/device at : <div id="status"></div>
+	Received from an OSC app/device at :
+	<div id="status"></div>
 
-<hr />
+	<hr />
 
-<script src="http://10.0.0.27:8085/socket.io/socket.io.js"></script>
+	<script src="http://10.0.0.27:8085/socket.io/socket.io.js"></script>
+<!-- 	<script type="text/javascript" -->
+<!-- 		src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.dev.js"></script> -->
+	<script>
+		socket = io.connect('http://10.0.0.27', {
+			port : 8085,
+			rememberTransport : false
+		});
+		console.log('oi');
+		socket.on('connect', function() {
+			// sends to socket.io server the host/port of oscServer
+			// and oscClient
+			socket.emit('config', {
+				server : {
+					port : 5000,
+					host : 'localhost'
+				},
+				client : {
+					port : 3334,
+					host : 'localhost'
+				}
+			});
+		});
 
-<script>
-   socket = io.connect('http://10.0.0.27', { port: 8085, rememberTransport: false});
-   console.log('oi');
-   socket.on('connect', function() {
-        // sends to socket.io server the host/port of oscServer
-        // and oscClient
-        socket.emit('config',
-            {
-                server: {
-                    port: 5000,
-                    host: 'localhost'
-                },
-                client: {
-                    port: 3334,
-                    host: 'localhost'
-                }
-            }
-        );
-    });
+		socket.on('message', function(obj) {
+			var status = document.getElementById("status");
+			status.innerHTML = obj[0];
+			//         console.log(obj);
+		});
+	</script>
 
-    socket.on('message', function(obj) {
-        var status = document.getElementById("status");
-        status.innerHTML = obj[0];
-//         console.log(obj);
-    });
-</script>
-
-<button onclick="socket.emit('message', '/foobar');">Send OSC message</button>
-<div id="status"></div>
-</body> </html>
+	<button onclick="socket.emit('message', '/foobar');">Send OSC
+		message</button>
+	<div id="status"></div>
+</body>
+</html>

@@ -40,8 +40,8 @@ function plotSignals(data) {
 	updateBar("Z", Math.abs(data.ACC_Z + 1)/4000);
 	updateBar("D", data.Meditation);
 	updateBar("F", data.Concentration);
-	data = [data.alphaABS, data.betaABS, data.tetaABS, data.gammaABS, data.deltaABS];
-	update();
+	dataBandWidths = [data.alphaABS, data.betaABS, data.tetaABS, data.gammaABS, data.deltaABS];
+	updateRadialBandWidth();
 	$("#focus").val(data.RNN)
 	if(data.RNN!=null)
 	updateBar("RNNPrediction", $("#focus").val());
@@ -94,25 +94,25 @@ var canvas2, context2, v, w, h;
 function connectToHeadband() {
 // connectToTheSocket();
 // $.get("https://localhost:8443/MSP/REST/GetWS/ConnectHeadband");
-	socket = io.connect('http://10.0.0.27', { port: 8085, rememberTransport: false});
-	   console.log('oi');
-	   socket.on('connect', function() {
-	        // sends to socket.io server the host/port of oscServer
-	        // and oscClient
-	        socket.emit('config',
-	            {
-	                server: {
-	                    port: 5000,
-	                    host: 'localhost'
-	                },
-	                client: {
-	                    port: 3334,
-	                    host: 'localhost'
-	                }
-	            }
-	        );
-	    });
-
+//	socket = io.connect('http://10.0.0.27', { port: 8085, rememberTransport: false});
+//	   console.log('oi');
+//	   socket.on('connect', function() {
+//	        // sends to socket.io server the host/port of oscServer
+//	        // and oscClient
+//	        socket.emit('config',
+//	            {
+//	                server: {
+//	                    port: 5000,
+//	                    host: 'localhost'
+//	                },
+//	                client: {
+//	                    port: 3334,
+//	                    host: 'localhost'
+//	                }
+//	            }
+//	        );
+//	    });
+	   setup();
 //	    socket.on('message', function(obj) {
 //	        var status = document.getElementById("status");
 //	        status.innerHTML = obj[0];

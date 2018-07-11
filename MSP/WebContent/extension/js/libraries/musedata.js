@@ -59,13 +59,11 @@ function museConnector(_url, portNo) {
     //ws = new WebSocket(url);
     socket = io.connect(_url, { port: portNo, rememberTransport: false});
     socket.on('connect', function() {
-        // sends to socket.io server the host/port of oscServer
-        // and oscClient
         socket.emit('config',
             {
                 server: {
-                    port: 5000,
-                    host: 'localhost'
+                    port: $("#clientPort").val(),
+                    host: $("#clientAddress").val()
                 },
                 client: {
                     port: 3334,

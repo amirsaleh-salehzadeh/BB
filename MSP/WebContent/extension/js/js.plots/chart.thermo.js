@@ -1,33 +1,33 @@
 var width = 66,
-    height = 190,
-    maxTemp = 100,
-    minTemp = 0,
-    currentFocusTemp = 11.2,
-    currentMelowTemp = 11.2;
+height = 190,
+maxTemp = 100,
+minTemp = 0,
+currentFocusTemp = 10.4,
+currentMelowTemp = 91.2;
 
 // Scale step size
 var step = 20;
 
 var bottomY = height - 5,
     topY = 5,
-    bulbRadius = 20,
-    tubeWidth = 17,
+    bulbRadius = 17,
+    tubeWidth = 11,
     tubeBorderWidth = 1,
     mercuryColor = getColorForPercentage(currentFocusTemp/100),
     mercuryColorMel = getColorForPercentage(1-(currentMelowTemp/100)),
-    innerBulbColor = "rgb(230,250,250)",
+    innerBulbColor = "rgba(230,250,250, .3)",
     tubeBorderColor = "#999999";
 
 var bulb_cy = bottomY - bulbRadius,
     bulb_cx = width/2,
     top_cy = topY + tubeWidth/2;
 
-
+$("#focusThermo").html("");
 var svg = d3.select("#focusThermo")
   .append("svg")
   .attr("width", width)
   .attr("height", height);
-
+$("#relaxThermo").html("");
 var svgR = d3.select("#relaxThermo")
 .append("svg")
 .attr("width", width)
@@ -40,19 +40,19 @@ var defsR = svgR.append("defs");
 // Define the radial gradient for the bulb fill colour
 var bulbGradient = defs.append("radialGradient")
   .attr("id", "bulbGradient")
-  .attr("cx", "50%")
-  .attr("cy", "50%")
-  .attr("r", "50%")
-  .attr("fx", "50%")
-  .attr("fy", "50%");
+  .attr("cx", "30%")
+  .attr("cy", "30%")
+  .attr("r", "30%")
+  .attr("fx", "30%")
+  .attr("fy", "30%");
 
 var bulbGradientR = defsR.append("radialGradient")
 .attr("id", "bulbGradientR")
-.attr("cx", "50%")
-.attr("cy", "50%")
-.attr("r", "50%")
-.attr("fx", "50%")
-.attr("fy", "50%");
+.attr("cx", "30%")
+.attr("cy", "30%")
+.attr("r", "30%")
+.attr("fx", "30%")
+.attr("fy", "30%");
 
 bulbGradient.append("stop")
   .attr("offset", "0%")
@@ -203,8 +203,8 @@ var scale = d3.scale.linear()
 [minTemp, maxTemp].forEach(function(t) {
 
   var isMax = (t == maxTemp),
-      label = (isMax ? "max" : "min"),
-      textCol = (isMax ? "rgb(230, 0, 0)" : "rgb(0, 0, 230)"),
+      label = (isMax ? "Max" : "Min"),
+      textCol = (isMax ? "#FF3300" : "#0099FF"),
       textOffset = (isMax ? -4 : 4);
 
   svgR.append("line")
@@ -236,10 +236,11 @@ var tubeFill_bottomR = bulb_cy,
 
 // Rect element for the red mercury column
 svg.append("rect")
-  .attr("x", width/2 - (tubeWidth - 10)/2)
+  .attr("x", width/2 - (tubeWidth - 6)/2)
   .attr("y", tubeFill_top)
-  .attr("width", tubeWidth - 10)
+  .attr("width", tubeWidth - 6)
   .attr("height", tubeFill_bottom - tubeFill_top)
+   .attr("id", "focusTemRec")
   .style("shape-rendering", "crispEdges")
   .style("fill", mercuryColor)
 
@@ -249,15 +250,17 @@ svg.append("circle")
   .attr("r", bulbRadius - 6)
   .attr("cx", bulb_cx)
   .attr("cy", bulb_cy)
+  .attr("id", "circleFocus")
   .style("fill", "url(#bulbGradient)")
   .style("stroke", mercuryColor)
   .style("stroke-width", "2px");
 
 // Rect element for the red mercury column
 svgR.append("rect")
-  .attr("x", width/2 - (tubeWidth - 10)/2)
+  .attr("x", width/2 - (tubeWidth - 6)/2)
   .attr("y", tubeFill_topR)
-  .attr("width", tubeWidth - 10)
+  .attr("id", "relaxTemRec")
+  .attr("width", tubeWidth - 6)
   .attr("height", tubeFill_bottom - tubeFill_topR)
   .style("shape-rendering", "crispEdges")
   .style("fill", mercuryColorMel)
@@ -268,6 +271,7 @@ svgR.append("circle")
   .attr("r", bulbRadius - 6)
   .attr("cx", bulb_cx)
   .attr("cy", bulb_cy)
+  .attr("id", "circleR")
   .style("fill", "url(#bulbGradientR)")
   .style("stroke", mercuryColorMel)
   .style("stroke-width", "2px");
@@ -307,4 +311,18 @@ svgAxis.selectAll(".tick line")
   .style("shape-rendering", "crispEdges")
   .style("stroke-width", "1px");
 
+function updateFocusMeters(focus, melow){
+	var colorTmp = getColorForPercentage(1-(melow/100));
+	$("#relaxTemRec").css({height: tubeFill_bottom - Math.floor(scale(melow))});
+	$("#relaxTemRec").css({y: Math.floor(scale(melow))});
+	$("#relaxTemRec").css({fill: colorTmp}); 
+	$("#circleR").css({fill: colorTmp}); 
+	$("#circleR").css({stroke: colorTmp});
+	colorTmp = getColorForPercentage(focus/100);
+	$("#focusTemRec").css({height: tubeFill_bottom - Math.floor(scale(focus))});
+	$("#focusTemRec").css({y: Math.floor(scale(focus))});
+	$("#focusTemRec").css({fill: colorTmp}); 
+	$("#circleFocus").css({fill: colorTmp}); 
+	$("#circleFocus").css({stroke: colorTmp});
+}
 

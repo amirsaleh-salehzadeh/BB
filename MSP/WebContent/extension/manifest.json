@@ -28,7 +28,7 @@
 	"web_accessible_resources": [
 		"*"
 	],
-	"content_security_policy": "script-src 'self' 'unsafe-eval' https://localhost:8443/* http://localhost; object-src 'self'",
+	"content_security_policy": "script-src 'self' 'unsafe-eval' http://127.0.0.1:8085 https://127.0.0.1:8085 https://cdnjs.cloudflare.com/; object-src 'self';",
 	 "content_scripts": [{
 	     "js": ["js/jquery.js"],
 	     "matches": ["http://*/*", "https://*/*"]
