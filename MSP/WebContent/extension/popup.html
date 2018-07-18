@@ -9,10 +9,8 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/training.progress.bars.css">
 <link rel="stylesheet" href="css/theme-classic.css">
-<script async="async" type="text/javascript" src="js/webgazer.js"></script>
 <script src="js/jquery.js"></script>
 <script src="js/jquery.mobile-1.4.5.min.js"></script>
-<script src="js/main.js"></script>
 <script type="text/javascript"
 	src="js/js.plots/charts.d3.core.engine.js"></script>
 <script type="text/javascript" src="js/js.plots/chart.radial.bar.js"></script>
@@ -151,11 +149,10 @@
 					src="https://localhost:8443/MSP/extension/audio_spectrogram.html"
 					scrolling="yes" id="appFrame" width="333" height="111"
 					frameborder="0" allow="microphone; camera;"> </iframe></li>
-			<li class="ui-bar"><div class="ui-block-solo"
-					id="webGazerContainer">
-					<video id="webgazerVideoPresentation" autoplay="" width="333"
-						height="187"></video>
-				</div></li>
+			<li class="ui-bar"><iframe
+					src="https://localhost:8443/MSP/extension/video_gazer.html"
+					scrolling="yes" id="appFrame" width="333" height="187"
+					frameborder="0" allow="microphone; camera;"> </iframe></li>
 		</ul>
 	</div>
 </body>

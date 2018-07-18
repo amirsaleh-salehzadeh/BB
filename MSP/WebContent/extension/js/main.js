@@ -3,7 +3,7 @@ var cl;
 var pauseOverlay = false;
 window.onload = function() {
 	var leftDist = '0px';
-//	$("#connectToMuseBTN").on('click', connectToMuse);
+	// $("#connectToMuseBTN").on('click', connectToMuse);
 	var setup = function() {
 		var width = 333;
 		var height = Math.round(width / 1.33);
@@ -44,8 +44,8 @@ window.onload = function() {
 		document.getElementById("webGazerContainer").appendChild(faceOverlay);
 
 		var canvas = document.getElementById("plotting_canvas");
-		canvas.width = window.innerWidth;
-		canvas.height = window.innerHeight;
+		canvas.width = '313px';
+		canvas.height = '187px';
 		canvas.style.position = 'fixed';
 		canvas.style.top = '0px';
 		canvas.style.right = '0px';
@@ -71,21 +71,21 @@ window.onload = function() {
 		drawLoop();
 		// evaluateAccuracy();
 	};
-	// webgazer.setRegression('ridge').setTracker('clmtrackr').setGazeListener(
-	// function(data, clock) {
-	// if (data != null) {
-	// return;
-	// }
-	// }).begin();
-	//
-	// function checkIfReady() {
-	// if (webgazer.isReady()) {
-	// setup();
-	// } else {
-	// setTimeout(checkIfReady, 500);
-	// }
-	// }
-	// setTimeout(checkIfReady, 500);
+	webgazer.setRegression('ridge').setTracker('clmtrackr').setGazeListener(
+			function(data, clock) {
+				if (data != null) {
+					return;
+				}
+			}).begin();
+
+	function checkIfReady() {
+		if (webgazer.isReady()) {
+			setup();
+		} else {
+			setTimeout(checkIfReady, 500);
+		}
+	}
+	setTimeout(checkIfReady, 500);
 };
 
 // function drawLoop() {
@@ -172,16 +172,14 @@ var getColorForPercentage = function(pct) {
 }
 
 var requestAnimFrame = (function() {
-	return window.requestAnimationFrame
-			|| window.webkitRequestAnimationFrame
-			|| window.mozRequestAnimationFrame
-			|| window.oRequestAnimationFrame
+	return window.requestAnimationFrame || window.webkitRequestAnimationFrame
+			|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame
 			|| window.msRequestAnimationFrame
 			|| function(/* function FrameRequestCallback */callback, /*
 																		 * DOMElement
 																		 * Element
 																		 */
-					element) {
+			element) {
 				return window.setTimeout(callback, 1000 / 60);
 			};
 })();
