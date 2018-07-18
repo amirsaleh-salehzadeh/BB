@@ -49,7 +49,7 @@ def get_filepaths(mainfolder):
     folders = os.listdir(mainfolder)
     for folder in folders:
         fpath = mainfolder + folder
-        if os.path.isdir(fpath) and "ACC" not in folder:
+        if os.path.isdir(fpath) and "ACC" and "orm" and "all" not in folder:
             filenames = os.listdir(fpath)
             filenames = [x for x in filenames if ".file" not in x and "png" not in x]
             for filename in filenames[:len(filenames)]:

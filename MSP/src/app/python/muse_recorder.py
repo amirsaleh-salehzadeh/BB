@@ -21,7 +21,7 @@ def runRecording():
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(signalArrays)
             signalArraysArr.append(signalArrays)
-    threading.Timer(0.007, runRecording).start()
+    threading.Timer(0.005, runRecording).start()
 
 
 def acc_handler(unused_addr, args, acc_x, acc_y, acc_z):

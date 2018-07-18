@@ -124,7 +124,7 @@ def build_inputs(files_list, accel_labels, file_label_dict):
                 chunksize=None, tupleize_cols=None, date_format=None, doublequote=True,
                 escapechar=None)
 #                 tmp = pd.DataFrame(columns=[])
-            tmp = tmp[['mean', 'skew']]
+            tmp = tmp[['mean', 'skew', 'standard deviation']]
             processedFeatures = np.array(tmp)
             
             for inputs in range(len(processedFeatures)):
