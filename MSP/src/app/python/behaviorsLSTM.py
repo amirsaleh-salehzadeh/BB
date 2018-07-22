@@ -22,10 +22,6 @@ from biosppy.signals.tools import band_power
 from sklearn.preprocessing.data import normalize
 from keras.engine.input_layer import Input
 from keras.optimizers import Adam
-from keras.layers.convolutional import Conv2D
-from keras.layers.normalization import BatchNormalization
-from keras.layers.pooling import AveragePooling2D
-from keras.constraints import max_norm
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
 np.random.seed(3)
@@ -271,41 +267,55 @@ def drawMe(yVal=None, xVal=None, title="title", xlabel="xlabel", ylabel="ylabel"
     plt.close()
 
 
-def square(x):
-    return K.square(x)
-
-
-def log(x):
-    return K.log(K.clip(x, min_value=1e-7, max_value=10000))  
-
-
 def build_model(X_train, X_test, Y_train, noLSTM, train_labels):
     model = Sequential()
     model.reset_states()
-#     with codecs.open(rootFolder + "training.csv", 'a') as logfile:
-#         fieldnames = ['lstm1', 'lstm2', 'dense1', 'dense2', 'dense3']
-#         writer = csv.DictWriter(logfile, fieldnames=fieldnames)
-#         writer.writerow({'lstm1': noLSTM[0], 'lstm2': noLSTM[1],
-#                          'dense1': noLSTM[2], 'dense2': noLSTM[3] , 'dense3': noLSTM[4]})
+    with codecs.open(rootFolder + "training.csv", 'a') as logfile:
+        fieldnames = ['lstm1', 'lstm2', 'dense1', 'dense2', 'dense3']
+        writer = csv.DictWriter(logfile, fieldnames=fieldnames)
+        writer.writerow({'lstm1': noLSTM[0], 'lstm2': noLSTM[1],
+                         'dense1': noLSTM[2], 'dense2': noLSTM[3] , 'dense3': noLSTM[4]})
     
     # input
-    dropoutRate = 0.5
-    Chans = X_train.shape[2]
-    Samples = slidingWindowSize
-    input_main = Input(X_train.shape)
-    block1 = Conv2D(40, (1, 13),
-                         input_shape=(X_train.shape),
-                         kernel_constraint=max_norm(2.))(input_main)
-    block1 = Conv2D(40, (Chans, 1), use_bias=False,
-                          kernel_constraint=max_norm(2.))(block1)
-    block1 = BatchNormalization(axis=1, epsilon=1e-05, momentum=0.1)(block1)
-    block1 = Activation(square)(block1)
-    block1 = AveragePooling2D(pool_size=(1, 35), strides=(1, 7))(block1)
-    block1 = Activation(log)(block1)
-    block1 = Dropout(dropoutRate)(block1)
-    flatten = Flatten()(block1)
-    dense = Dense(3, kernel_constraint=max_norm(0.5))(flatten)
-    softmax = Activation('softmax')(dense)
+    if(noLSTM[2] != 0):
+        model.add(Dense(X_train.shape[2], input_shape=(slidingWindowSize, X_train.shape[2]),
+                         activation='tanh', use_bias=True))
+    if(noLSTM[3] != 0):
+            model.add(Dense(noLSTM[3], activation='tanh', use_bias=True))
+    if(noLSTM[4] != 0):
+            model.add(Dense(noLSTM[4], activation='tanh', use_bias=True))
+    model.add(LSTM(noLSTM[0], activation='tanh', recurrent_activation='hard_sigmoid', \
+        use_bias=True, kernel_initializer='glorot_uniform', \
+        recurrent_initializer='orthogonal', \
+        unit_forget_bias=True, kernel_regularizer=None, \
+        recurrent_regularizer=None, \
+        bias_regularizer=None, activity_regularizer=None, \
+        kernel_constraint=None, recurrent_constraint=None, \
+        bias_constraint=None, dropout=0.0, recurrent_dropout=0.0, \
+        implementation=1, return_sequences=True, return_state=False, \
+        go_backwards=True, stateful=False, unroll=False))
+    model.add(Dropout(0.5))
+    if(noLSTM[1] != 0):
+        model.add(LSTM(noLSTM[1], activation='tanh', recurrent_activation='hard_sigmoid', \
+            use_bias=True, kernel_initializer='glorot_uniform', \
+            recurrent_initializer='orthogonal', \
+            unit_forget_bias=True, kernel_regularizer=None, \
+            recurrent_regularizer=None, \
+            bias_regularizer=None, activity_regularizer=None, \
+            kernel_constraint=None, recurrent_constraint=None, \
+            bias_constraint=None, dropout=0.0, recurrent_dropout=0.0, \
+            implementation=1, return_sequences=True, return_state=False, \
+            go_backwards=True, stateful=False, unroll=False))
+        model.add(Dropout(0.5))
+    # dense
+    if(noLSTM[3] != 0):
+            model.add(Dense(noLSTM[3], activation='tanh', use_bias=True))
+    if(noLSTM[4] != 0):
+            model.add(Dense(noLSTM[4], activation='tanh', use_bias=True))
+            model.add(Dropout(0.5))
+    model.add(Flatten())
+    model.add(Dense(3))
+    model.add(Activation('softmax'))
 
 #   ['acc', 'loss', 'val_acc', 'val_loss']
     opt = Adam(lr=0.0011, decay=0.001)
@@ -314,18 +324,19 @@ def build_model(X_train, X_test, Y_train, noLSTM, train_labels):
     fnametmp = rootFolder + "plot_{}_{}_{}_{}_{}.png".format("Model", noLSTM[0], noLSTM[1], noLSTM[2], noLSTM[3], noLSTM[4])
     plot_model(model, to_file=fnametmp, show_shapes=True,
                show_layer_names=True, rankdir='TB')
+    return
     early_stopping = EarlyStopping(monitor='val_loss', min_delta=0,
-                                   patience=3, verbose=1, mode='auto')
+                                   patience=2, verbose=1, mode='auto')
     tn = TerminateOnNaN()
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, min_lr=1e-7, verbose=2)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, min_lr=1e-7, verbose=1)
     checkpoint_path = os.path.join(rootFolder, "weights.best_{}_{}_{}_{}_{}.hdf5".format("model", noLSTM[0], noLSTM[1], noLSTM[2], noLSTM[3], noLSTM[4]))
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_acc', verbose=1,
                                  save_best_only=True, mode='max')
     csv_logger = CSVLogger(rootFolder + 'training.csv', append=True)
     early_stop = EarlyStopping(monitor='val_acc', patience=1, verbose=2, mode='auto')
     callback_fns = [early_stopping, tn, csv_logger, checkpoint, reduce_lr]
-    history = model.fit(X_train, Y_train, batch_size=20, epochs=5,
-              callbacks=callback_fns, validation_split=0.3, shuffle=True)
+    history = model.fit(X_train, Y_train, batch_size=20, epochs=20,
+              callbacks=callback_fns, validation_split=0.2, shuffle=True)
     
     fnametmp = rootFolder + "model_{}_{}_{}_{}_{}".format(noLSTM[0], noLSTM[1], noLSTM[2], noLSTM[3], noLSTM[4])
     model.save_weights(fnametmp + '.h5')
@@ -367,27 +378,27 @@ if __name__ == '__main__':
         activity_labels,
         training_dict)
     tmpX = np.array(X_train)
-#     tmpY = np.array(y_train)
-#     xsize = X_train.shape[2] - int((X_train.shape[2] - 3) / 3)
-#     archs = [[32, 0, xsize, 0, 0],
-#              [128, 0, xsize, 0, 0],
-#              [32, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-#              [128, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-#              [32, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3),
-#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)],
-#              [128, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3),
-#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)],
-#              [128, 32, xsize, 0, 0],
-#              [128, 128, xsize, 0, 0],
-#              [128, 32, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-#              [128, 128, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-#              [128, 32, xsize, xsize - int((X_train.shape[1] - 3) / 3),
-#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)],
-#              [128, 128, xsize, xsize - int((X_train.shape[1] - 3) / 3),
-#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)]]
+    tmpY = np.array(y_train)
+    xsize = X_train.shape[2] - int((X_train.shape[2] - 3) / 10)
+    archs = [[64, 0, xsize, 0, 0],
+             [128, 0, xsize, 0, 0],
+             [64, 0, xsize, xsize - int((X_train.shape[1] - 3) / 10), 0],
+             [128, 0, xsize, xsize - int((X_train.shape[1] - 3) / 10), 0],
+             [64, 0, xsize, xsize - int((X_train.shape[1] - 3) / 10),
+                            xsize - int(2 * (X_train.shape[1] - 3) / 10)],
+             [128, 0, xsize, xsize - int((X_train.shape[1] - 3) / 10),
+                            xsize - int(2 * (X_train.shape[1] - 3) / 10)],
+             [128, 64, xsize, 0, 0],
+             [128, 128, xsize, 0, 0],
+             [128, 64, xsize, xsize - int((X_train.shape[1] - 3) / 10), 0],
+             [128, 128, xsize, xsize - int((X_train.shape[1] - 3) / 10), 0],
+             [128, 64, xsize, xsize - int((X_train.shape[1] - 3) / 10),
+                            xsize - int(2 * (X_train.shape[1] - 3) / 10)],
+             [128, 128, xsize, xsize - int((X_train.shape[1] - 3) / 10),
+                            xsize - int(2 * (X_train.shape[1] - 3) / 10)]]
     X_test = tmpX[0:int(floor(0.2 * len(tmpX))), :]
     print(X_train.shape)
-#     for q in range(len(archs)):
-    build_model(X_train, X_test, y_train, np.array([0, 1, 1, 2, 5]), train_labels)
-#         print(archs[q])
+    for q in range(len(archs)):
+        build_model(X_train, X_test, y_train, np.array(archs[q]), train_labels)
+        print(archs[q])
 

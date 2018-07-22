@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
-from keras.callbacks import CSVLogger, EarlyStopping, TerminateOnNaN, \
+from keras.callbacks import CSVLogger, EarlyStopping, TerminateOnNaN,\
     ReduceLROnPlateau, ModelCheckpoint
 import tensorflow as tf
 from keras import backend as K
@@ -22,12 +22,11 @@ from biosppy.signals.tools import band_power
 from sklearn.preprocessing.data import normalize
 from keras.engine.input_layer import Input
 from keras.optimizers import Adam
-from keras.layers.convolutional import Conv2D
-from keras.layers.normalization import BatchNormalization
-from keras.layers.pooling import AveragePooling2D
-from keras.constraints import max_norm
+from keras.regularizers import L1L2
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ['PYTHONHASHSEED'] = '0'
 np.random.seed(3)
 rn.seed(12345)
 session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
@@ -44,7 +43,6 @@ K.set_session(sess)
 rootFolder = "C:/RecordingFiles/"
 slidingWindowSize = 50
 
-
 def get_filepaths(mainfolder):
     training_filepaths = {}
     folders = os.listdir(mainfolder)
@@ -52,10 +50,7 @@ def get_filepaths(mainfolder):
         fpath = mainfolder + folder
         if os.path.isdir(fpath) and "ACC" not in folder:
             filenames = os.listdir(fpath)
-            filenames = [x for x in filenames if ".file" not in x 
-                         and "png" not in x 
-                         and "orm" not in x 
-                         and "ower" not in x]
+            filenames = [x for x in filenames if ".file" not in x and "png" not in x]
             for filename in filenames[:len(filenames)]:
                 fullpath = fpath + "/" + filename
                 training_filepaths[fullpath] = folder
@@ -123,29 +118,19 @@ def build_inputs(files_list, accel_labels, file_label_dict):
             raw_data, indx = get_features(raw_data, path)
             tmp = pd.DataFrame(normalize(raw_data, axis=0, norm='max'))
             tmp.columns = raw_data.columns
-    #         tmp.to_csv(path_or_buf=path + "Normalized.csv", sep=',',
-    #             na_rep='', float_format=None, columns=None, header=True,
-    #             index=True, index_label=None, mode='w', encoding=None,
-    #             compression=None, quoting=None, quotechar='"', line_terminator='\n',
-    #             chunksize=None, tupleize_cols=None, date_format=None, doublequote=True,
-    #             escapechar=None)
-    #                 tmp = pd.DataFrame(columns=[])
             tmp = tmp[['mean', 'skew', 'standard deviation']]
-            processedFeatures = vectorize(tmp)
+            processedFeatures = np.array(tmp)
+            
             for inputs in range(len(processedFeatures)):
-                X_seq.append(np.array(processedFeatures[inputs]))
+                X_seq.append(processedFeatures[inputs])
                 y_seq.append(list(target))
                 labels.append(target_label)
-        X_ = np.array(X_seq)
-        y_ = np.array(y_seq)
-        labels = np.array(labels)
-        with open(rootFolder + "experim.file", "wb") as f:
-            pickle.dump([X_, y_, labels], f, pickle.HIGHEST_PROTOCOL)
-        return X_, y_, labels
-
-
-def vectorize(normed):
-    return [normed[i:i + slidingWindowSize] for i in range(len(normed) - slidingWindowSize)]
+        X_ = pd.DataFrame(X_seq)
+        y_ = pd.DataFrame(y_seq)
+        labels = pd.DataFrame(labels)
+    with open(rootFolder + "experim.file", "wb") as f:
+        pickle.dump([X_, y_, labels], f, pickle.HIGHEST_PROTOCOL)
+    return X_, y_, labels
 
 
 def get_features(normed, fp):
@@ -180,12 +165,6 @@ def get_features(normed, fp):
     values = pd.concat(values)
     index = np.array(index, dtype='int')
     values = values.dropna()
-#     values.to_csv(path_or_buf=fp + "power-bands-processed-CSV.csv", sep=',',
-#               na_rep='', float_format=None, columns=None, header=True,
-#               index=True, index_label=None, mode='w', encoding=None,
-#               compression=None, quoting=None, quotechar='"', line_terminator='\n',
-#               chunksize=None, tupleize_cols=None, date_format=None, doublequote=True,
-#               escapechar=None)
     names = ['bands', 'mean', 'standard deviation', 'variance', 'skew', 'median']
     featuredVals = pd.concat([values, values.rolling(slidingWindowSize).mean(), values.rolling(slidingWindowSize).std(),
                               values.rolling(slidingWindowSize).var(), values.rolling(slidingWindowSize).skew(),
@@ -271,71 +250,50 @@ def drawMe(yVal=None, xVal=None, title="title", xlabel="xlabel", ylabel="ylabel"
     plt.close()
 
 
-def square(x):
-    return K.square(x)
-
-
-def log(x):
-    return K.log(K.clip(x, min_value=1e-7, max_value=10000))  
-
-
 def build_model(X_train, X_test, Y_train, noLSTM, train_labels):
     model = Sequential()
     model.reset_states()
-#     with codecs.open(rootFolder + "training.csv", 'a') as logfile:
-#         fieldnames = ['lstm1', 'lstm2', 'dense1', 'dense2', 'dense3']
-#         writer = csv.DictWriter(logfile, fieldnames=fieldnames)
-#         writer.writerow({'lstm1': noLSTM[0], 'lstm2': noLSTM[1],
-#                          'dense1': noLSTM[2], 'dense2': noLSTM[3] , 'dense3': noLSTM[4]})
+    with codecs.open(rootFolder + "training.csv", 'a') as logfile:
+        fieldnames = ['lstms', 'outpts']
+        writer = csv.DictWriter(logfile, fieldnames=fieldnames)
+        writer.writerow({'lstms': noLSTM[0], 'outpts': noLSTM[1]})
+        print(noLSTM[0], " >> ", noLSTM[1])
     
     # input
-    dropoutRate = 0.5
-    Chans = X_train.shape[2]
-    Samples = slidingWindowSize
-    input_main = Input(X_train.shape)
-    block1 = Conv2D(40, (1, 13),
-                         input_shape=(X_train.shape),
-                         kernel_constraint=max_norm(2.))(input_main)
-    block1 = Conv2D(40, (Chans, 1), use_bias=False,
-                          kernel_constraint=max_norm(2.))(block1)
-    block1 = BatchNormalization(axis=1, epsilon=1e-05, momentum=0.1)(block1)
-    block1 = Activation(square)(block1)
-    block1 = AveragePooling2D(pool_size=(1, 35), strides=(1, 7))(block1)
-    block1 = Activation(log)(block1)
-    block1 = Dropout(dropoutRate)(block1)
-    flatten = Flatten()(block1)
-    dense = Dense(3, kernel_constraint=max_norm(0.5))(flatten)
-    softmax = Activation('softmax')(dense)
-
+    model.add(Dense(3, input_dim=(X_train.shape[1]), init="uniform",
+                    activation="softmax", 
+                    kernel_regularizer=L1L2(l1=0.0, l2=0.1)))
 #   ['acc', 'loss', 'val_acc', 'val_loss']
-    opt = Adam(lr=0.0011, decay=0.001)
-    model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='sgd', loss='categorical_crossentropy', metrics=['accuracy'])
    
-    fnametmp = rootFolder + "plot_{}_{}_{}_{}_{}.png".format("Model", noLSTM[0], noLSTM[1], noLSTM[2], noLSTM[3], noLSTM[4])
+    fnametmp = rootFolder + "plot-log.png"
     plot_model(model, to_file=fnametmp, show_shapes=True,
                show_layer_names=True, rankdir='TB')
+    
+    epoch_count = 50
+    _patience = min(30, max(epoch_count // 5, 20))
     early_stopping = EarlyStopping(monitor='val_loss', min_delta=0,
-                                   patience=3, verbose=1, mode='auto')
+                                   patience=_patience, verbose=1, mode='auto')
     tn = TerminateOnNaN()
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, min_lr=1e-7, verbose=2)
-    checkpoint_path = os.path.join(rootFolder, "weights.best_{}_{}_{}_{}_{}.hdf5".format("model", noLSTM[0], noLSTM[1], noLSTM[2], noLSTM[3], noLSTM[4]))
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, min_lr=1e-7, verbose=1)
+    checkpoint_path = os.path.join(rootFolder, "weights.best_{}_{}_{}.hdf5".format("model", noLSTM[0], noLSTM[1]))
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_acc', verbose=1,
                                  save_best_only=True, mode='max')
     csv_logger = CSVLogger(rootFolder + 'training.csv', append=True)
     early_stop = EarlyStopping(monitor='val_acc', patience=1, verbose=2, mode='auto')
     callback_fns = [early_stopping, tn, csv_logger, checkpoint, reduce_lr]
-    history = model.fit(X_train, Y_train, batch_size=20, epochs=5,
-              callbacks=callback_fns, validation_split=0.3, shuffle=True)
+    history = model.fit(X_train, Y_train, batch_size=1, epochs=50,
+              callbacks=callback_fns, validation_split=0.2, shuffle=True)
     
-    fnametmp = rootFolder + "model_{}_{}_{}_{}_{}".format(noLSTM[0], noLSTM[1], noLSTM[2], noLSTM[3], noLSTM[4])
+    fnametmp = rootFolder + "model_{}_{}_{}".format("Model", noLSTM[0], noLSTM[1])
     model.save_weights(fnametmp + '.h5')
     with open(fnametmp + '.json', 'w') as f:
         f.write(model.to_json())
-    fnametmp = "plot-{}-{}-{}.png".format("model-accuracy", noLSTM[0], noLSTM[1])
+    fnametmp = rootFolder + "plot_{}_{}_{}.png".format("model-accuracy", noLSTM[0], noLSTM[1])
     drawMe(yVal=history.history['acc'], xVal=history.history['val_acc'],
            title='model accuracy', xlabel='epoch', ylabel='accuracy', legend=['train', 'test'], save=True,
            fileName=fnametmp, show=False)
-    fnametmp = "plot-{}-{}-{}.png".format("model-loss", noLSTM[0], noLSTM[1])
+    fnametmp = rootFolder + "plot-{}-{}-{}.png".format("model-loss", noLSTM[0], noLSTM[1])
     drawMe(yVal=history.history['loss'], xVal=history.history['val_loss'],
            title='model loss', xlabel='epoch', ylabel='loss', legend=['train', 'test'], save=True,
            fileName=fnametmp, show=False)
@@ -367,27 +325,11 @@ if __name__ == '__main__':
         activity_labels,
         training_dict)
     tmpX = np.array(X_train)
-#     tmpY = np.array(y_train)
-#     xsize = X_train.shape[2] - int((X_train.shape[2] - 3) / 3)
-#     archs = [[32, 0, xsize, 0, 0],
-#              [128, 0, xsize, 0, 0],
-#              [32, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-#              [128, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-#              [32, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3),
-#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)],
-#              [128, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3),
-#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)],
-#              [128, 32, xsize, 0, 0],
-#              [128, 128, xsize, 0, 0],
-#              [128, 32, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-#              [128, 128, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-#              [128, 32, xsize, xsize - int((X_train.shape[1] - 3) / 3),
-#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)],
-#              [128, 128, xsize, xsize - int((X_train.shape[1] - 3) / 3),
-#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)]]
+    tmpY = np.array(y_train)
     X_test = tmpX[0:int(floor(0.2 * len(tmpX))), :]
-    print(X_train.shape)
-#     for q in range(len(archs)):
-    build_model(X_train, X_test, y_train, np.array([0, 1, 1, 2, 5]), train_labels)
-#         print(archs[q])
+    xsize = X_train.shape[1] - int((X_train.shape[1] - 3) / 7)
+    for q in range(1):
+        build_model(X_train, X_test, y_train, np.array([q, xsize]), train_labels)
+        print(str(q), " >>>> ", str(xsize), " >> ", X_train.shape[1])
+        xsize = xsize - int((X_train.shape[1] - 3) / 7)
 

@@ -24,6 +24,10 @@ def runRecording():
     threading.Timer(0.005, runRecording).start()
 
 
+def batt_handler(unused_addr, args, battery1, battery2, battery3, battery4):
+    print(battery4)
+
+
 def acc_handler(unused_addr, args, acc_x, acc_y, acc_z):
     signalArrays[2], signalArrays[3], signalArrays[4] = acc_x, acc_y, acc_z
 
@@ -124,6 +128,7 @@ if __name__ == "__main__":
     dispatcher.map("/muse/eeg", eeg_handler, "EEG")
     dispatcher.map("/muse/acc", acc_handler, "ACC")
     dispatcher.map("/muse/elements/horseshoe", hs_handler, "HSH")
+    dispatcher.map("/muse/batt", batt_handler, "battery")
     runRecording()
     server = osc_server.ThreadingOSCUDPServer(
         (args.ip, args.port), dispatcher)

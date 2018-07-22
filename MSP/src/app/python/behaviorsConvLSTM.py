@@ -7,11 +7,12 @@ from keras.layers.recurrent import LSTM
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Activation, Flatten
+from keras.layers.core import Dense, Dropout, Activation, Flatten,\
+    SpatialDropout1D
 from keras.callbacks import CSVLogger, EarlyStopping, TerminateOnNaN, \
     ReduceLROnPlateau, ModelCheckpoint
 import tensorflow as tf
-from keras import backend as K
+from keras import backend as K, metrics
 import random as rn
 from numpy.random.mtrand import shuffle
 import codecs
@@ -22,10 +23,10 @@ from biosppy.signals.tools import band_power
 from sklearn.preprocessing.data import normalize
 from keras.engine.input_layer import Input
 from keras.optimizers import Adam
+from keras.layers.convolutional import Conv1D
+from keras.layers.pooling import MaxPooling1D
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-os.environ['PYTHONHASHSEED'] = '0'
 np.random.seed(3)
 rn.seed(12345)
 session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
@@ -39,8 +40,9 @@ classes = 2
 sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
 K.set_session(sess)
 
-rootFolder = "C:/RecordingFiles/"
+rootFolder = "data/"
 slidingWindowSize = 50
+
 
 def get_filepaths(mainfolder):
     training_filepaths = {}
@@ -49,7 +51,10 @@ def get_filepaths(mainfolder):
         fpath = mainfolder + folder
         if os.path.isdir(fpath) and "ACC" not in folder:
             filenames = os.listdir(fpath)
-            filenames = [x for x in filenames if ".file" not in x and "png" not in x]
+            filenames = [x for x in filenames if ".file" not in x 
+                         and "png" not in x 
+                         and "orm" not in x 
+                         and "ower" not in x]
             for filename in filenames[:len(filenames)]:
                 fullpath = fpath + "/" + filename
                 training_filepaths[fullpath] = folder
@@ -117,30 +122,30 @@ def build_inputs(files_list, accel_labels, file_label_dict):
             raw_data, indx = get_features(raw_data, path)
             tmp = pd.DataFrame(normalize(raw_data, axis=0, norm='max'))
             tmp.columns = raw_data.columns
-            tmp.to_csv(path_or_buf=path + "Normalized.csv", sep=',',
-                na_rep='', float_format=None, columns=None, header=True,
-                index=True, index_label=None, mode='w', encoding=None,
-                compression=None, quoting=None, quotechar='"', line_terminator='\n',
-                chunksize=None, tupleize_cols=None, date_format=None, doublequote=True,
-                escapechar=None)
-#                 tmp = pd.DataFrame(columns=[])
-            tmp = tmp[['mean', 'skew']]
+    #         tmp.to_csv(path_or_buf=path + "Normalized.csv", sep=',',
+    #             na_rep='', float_format=None, columns=None, header=True,
+    #             index=True, index_label=None, mode='w', encoding=None,
+    #             compression=None, quoting=None, quotechar='"', line_terminator='\n',
+    #             chunksize=None, tupleize_cols=None, date_format=None, doublequote=True,
+    #             escapechar=None)
+    #                 tmp = pd.DataFrame(columns=[])
+            tmp = tmp[['mean', 'skew', 'standard deviation']]
             processedFeatures = vectorize(tmp)
             for inputs in range(len(processedFeatures)):
-                X_seq.append(processedFeatures[inputs])
+                X_seq.append(np.array(processedFeatures[inputs]))
                 y_seq.append(list(target))
                 labels.append(target_label)
-        X_ = pd.DataFrame(X_seq)
-        y_ = pd.DataFrame(y_seq)
-        labels = pd.DataFrame(labels)
-    with open(rootFolder + "experim.file", "wb") as f:
-        pickle.dump([X_, y_, labels], f, pickle.HIGHEST_PROTOCOL)
-    return X_, y_, labels
+        X_ = np.array(X_seq)
+        y_ = np.array(y_seq)
+        labels = np.array(labels)
+        with open(rootFolder + "experim.file", "wb") as f:
+            pickle.dump([X_, y_, labels], f, pickle.HIGHEST_PROTOCOL)
+        return X_, y_, labels
+
 
 def vectorize(normed):
-    sequences = [normed[i:i + slidingWindowSize] for i in range(len(normed) - slidingWindowSize)]
-    shuffle(sequences)
-    return sequences
+    return [normed[i:i + slidingWindowSize] for i in range(len(normed) - slidingWindowSize)]
+
 
 def get_features(normed, fp):
     if(os.path.isfile(fp + "all-processed.file")):
@@ -265,7 +270,7 @@ def drawMe(yVal=None, xVal=None, title="title", xlabel="xlabel", ylabel="ylabel"
     plt.close()
 
 
-def build_model(X_train, X_test, Y_train, noLSTM, train_labels):
+def build_model(X_train, Y_train, noLSTM, train_labels):
     model = Sequential()
     model.reset_states()
     with codecs.open(rootFolder + "training.csv", 'a') as logfile:
@@ -273,11 +278,21 @@ def build_model(X_train, X_test, Y_train, noLSTM, train_labels):
         writer = csv.DictWriter(logfile, fieldnames=fieldnames)
         writer.writerow({'lstm1': noLSTM[0], 'lstm2': noLSTM[1],
                          'dense1': noLSTM[2], 'dense2': noLSTM[3] , 'dense3': noLSTM[4]})
-    
     # input
-    model.add(Dense(X_train.shape[1], input_dim=(X_train.shape[1]), init="uniform",
-    activation="tanh"))
-    model.add(LSTM(noLSTM[0], activation='tanh', recurrent_activation='hard_sigmoid', \
+    model.add(Conv1D(64, 3, activation='tanh', input_shape=(X_train.shape[1],
+                                                            X_train.shape[2])))
+    model.add(Conv1D(64, 3, activation='tanh'))
+    model.add(MaxPooling1D(2))
+    model.add(SpatialDropout1D(0.5))
+    model.add(Conv1D(64, 2, activation='tanh'))
+    model.add(Conv1D(64, 2, activation='tanh'))
+    model.add(MaxPooling1D(2))
+    model.add(SpatialDropout1D(0.3))
+    model.add(Conv1D(64, 1, activation='tanh'))
+    model.add(Conv1D(64, 1, activation='tanh'))
+    model.add(MaxPooling1D(2))
+    model.add(Dropout(0.2))
+    model.add(LSTM(128, activation='tanh', recurrent_activation='hard_sigmoid', \
         use_bias=True, kernel_initializer='glorot_uniform', \
         recurrent_initializer='orthogonal', \
         unit_forget_bias=True, kernel_regularizer=None, \
@@ -286,59 +301,51 @@ def build_model(X_train, X_test, Y_train, noLSTM, train_labels):
         kernel_constraint=None, recurrent_constraint=None, \
         bias_constraint=None, dropout=0.0, recurrent_dropout=0.0, \
         implementation=1, return_sequences=True, return_state=False, \
-        go_backwards=True, stateful=False, unroll=False, \
-        input_shape=(slidingWindowSize, X_train.shape[1])))
-    model.add(Dropout(0.5))
-    if(noLSTM[1] != 0):
-        model.add(LSTM(noLSTM[1], activation='tanh', recurrent_activation='hard_sigmoid', \
-            use_bias=True, kernel_initializer='glorot_uniform', \
-            recurrent_initializer='orthogonal', \
-            unit_forget_bias=True, kernel_regularizer=None, \
-            recurrent_regularizer=None, \
-            bias_regularizer=None, activity_regularizer=None, \
-            kernel_constraint=None, recurrent_constraint=None, \
-            bias_constraint=None, dropout=0.0, recurrent_dropout=0.0, \
-            implementation=1, return_sequences=False, return_state=False, \
-            go_backwards=False, stateful=False, unroll=False, \
-            input_shape=(slidingWindowSize, X_train.shape[1])))
-        model.add(Dropout(0.5))
-    # dense
-    if(noLSTM[2] != 0):
-        model.add(Dense(noLSTM[2], activation='tanh', use_bias=True))
-    if(noLSTM[3] != 0):
-            model.add(Dense(noLSTM[3], activation='tanh', use_bias=True))
-    if(noLSTM[4] != 0):
-            model.add(Dense(noLSTM[4], activation='tanh', use_bias=True))
-        
-    model.add(Dropout(0.5))
+        go_backwards=True, stateful=False, unroll=False))
+    model.add(Dropout(0.2))
+    model.add(LSTM(128, activation='tanh', recurrent_activation='hard_sigmoid', \
+        use_bias=True, kernel_initializer='glorot_uniform', \
+        recurrent_initializer='orthogonal', \
+        unit_forget_bias=True, kernel_regularizer=None, \
+        recurrent_regularizer=None, \
+        bias_regularizer=None, activity_regularizer=None, \
+        kernel_constraint=None, recurrent_constraint=None, \
+        bias_constraint=None, dropout=0.0, recurrent_dropout=0.0, \
+        implementation=1, return_sequences=True, return_state=False, \
+        go_backwards=True, stateful=False, unroll=False))
+    model.add(Dropout(0.1))
+    model.add(Dense(128, activation='tanh', use_bias=True))
+    model.add(Dense(64, activation='tanh', use_bias=True))
+    model.add(Dense(32, activation='tanh', use_bias=True))
+    model.add(Dropout(0.2))
     model.add(Flatten())
     model.add(Dense(3))
     model.add(Activation('softmax'))
 
 #   ['acc', 'loss', 'val_acc', 'val_loss']
-    opt = Adam(lr=0.0011, decay=0.001)
-    model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+#     opt = Adam(lr=0.0011, decay=0.001)
+#     model.compile(optimizer='rmse', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(loss='mean_squared_error',
+              optimizer='adam',
+              metrics=['accuracy'])
+    
    
-    fnametmp = rootFolder + "plot-{}-{}-{}.png".format("Model", noLSTM[0], noLSTM[1])
+    fnametmp = rootFolder + "plot_{}_{}_{}_{}_{}.png".format("Model", noLSTM[0], noLSTM[1], noLSTM[2], noLSTM[3], noLSTM[4])
     plot_model(model, to_file=fnametmp, show_shapes=True,
                show_layer_names=True, rankdir='TB')
-    return
-    epoch_count = 50
-    _patience = min(30, max(epoch_count // 5, 20))
     early_stopping = EarlyStopping(monitor='val_loss', min_delta=0,
-                                   patience=_patience, verbose=1, mode='auto')
+                                   patience=2, verbose=1, mode='auto')
     tn = TerminateOnNaN()
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, min_lr=1e-7, verbose=1)
-    checkpoint_path = os.path.join(rootFolder, "weights.best_{}_{}_{}.hdf5".format("model", noLSTM[0], noLSTM[1]))
+    checkpoint_path = os.path.join(rootFolder, "weights.best_{}_{}_{}_{}_{}.hdf5".format("model", noLSTM[0], noLSTM[1], noLSTM[2], noLSTM[3], noLSTM[4]))
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_acc', verbose=1,
                                  save_best_only=True, mode='max')
     csv_logger = CSVLogger(rootFolder + 'training.csv', append=True)
     early_stop = EarlyStopping(monitor='val_acc', patience=1, verbose=2, mode='auto')
-    callback_fns = [early_stopping, tn, csv_logger, checkpoint, reduce_lr]
-    history = model.fit(X_train, Y_train, batch_size=1, epochs=50,
+    callback_fns = [early_stopping, tn, csv_logger, checkpoint]
+    history = model.fit(X_train, Y_train, batch_size=20, epochs=10,
               callbacks=callback_fns, validation_split=0.2, shuffle=True)
     
-    fnametmp = rootFolder + "model_{}_{}_{}".format("Model", noLSTM[0], noLSTM[1])
+    fnametmp = rootFolder + "model_{}_{}_{}_{}_{}".format(noLSTM[0], noLSTM[1], noLSTM[2], noLSTM[3], noLSTM[4])
     model.save_weights(fnametmp + '.h5')
     with open(fnametmp + '.json', 'w') as f:
         f.write(model.to_json())
@@ -377,28 +384,26 @@ if __name__ == '__main__':
         training_files,
         activity_labels,
         training_dict)
-    tmpX = np.array(X_train)
-    tmpY = np.array(y_train)
-    xsize = X_train.shape[1] - int((X_train.shape[1] - 3) / 3)
-    archs = [[32, 0, xsize, 0, 0],
-             [128, 0, xsize, 0, 0],
-             [32, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-             [128, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-             [32, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3), 
-                            xsize - int(2*(X_train.shape[1] - 3) / 3)],
-             [128, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3), 
-                            xsize - int(2*(X_train.shape[1] - 3) / 3)],
-             [128, 32, xsize, 0, 0],
-             [128, 128, xsize, 0, 0],
-             [128, 32, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-             [128, 128, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
-             [128, 32, xsize, xsize - int((X_train.shape[1] - 3) / 3), 
-                            xsize - int(2*(X_train.shape[1] - 3) / 3)],
-             [128, 128, xsize, xsize - int((X_train.shape[1] - 3) / 3), 
-                            xsize - int(2*(X_train.shape[1] - 3) / 3)]]
-    X_test = tmpX[0:int(floor(0.2 * len(tmpX))), :]
-    
+    xsize = X_train.shape[2] - int((X_train.shape[2] - 3) / 3)
+#     archs = [[64, 0, xsize, 0, 0],
+#              [128, 0, xsize, 0, 0],
+#              [64, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
+#              [128, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
+#              [64, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3),
+#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)],
+#              [128, 0, xsize, xsize - int((X_train.shape[1] - 3) / 3),
+#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)],
+#              [128, 64, xsize, 0, 0],
+#              [128, 128, xsize, 0, 0],
+#              [128, 64, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
+#              [128, 128, xsize, xsize - int((X_train.shape[1] - 3) / 3), 0],
+#              [128, 64, xsize, xsize - int((X_train.shape[1] - 3) / 3),
+#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)],
+#              [128, 128, xsize, xsize - int((X_train.shape[1] - 3) / 3),
+#                             xsize - int(2 * (X_train.shape[1] - 3) / 3)]]
+    archs = [[128, 64, 128, 64, 32]]
+    print(X_train.shape)
     for q in range(len(archs)):
-        build_model(X_train, X_test, y_train, np.array(archs[q]), train_labels)
+        build_model(X_train, y_train, np.array(archs[q]), train_labels)
         print(archs[q])
 

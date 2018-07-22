@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
-from keras.callbacks import CSVLogger, EarlyStopping, TerminateOnNaN,\
+from keras.callbacks import CSVLogger, EarlyStopping, TerminateOnNaN, \
     ReduceLROnPlateau, ModelCheckpoint
 import tensorflow as tf
 from keras import backend as K
@@ -39,8 +39,9 @@ classes = 2
 sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
 K.set_session(sess)
 
-rootFolder = "C:/RecordingFiles/"
+rootFolder = "data/"
 slidingWindowSize = 50
+
 
 def get_filepaths(mainfolder):
     training_filepaths = {}
@@ -266,8 +267,8 @@ def build_model(X_train, X_test, Y_train, noLSTM, train_labels):
         print(noLSTM[0], " >> ", noLSTM[1])
     
     # input
-    model.add(Dense(X_train.shape[1], input_dim=(X_train.shape[1]), init="uniform",
-    activation="sigmoid"))
+    model.add(Dense(X_train.shape[1], input_dim=(X_train.shape[1]),
+    activation="tanh"))
     
     # dense
     for p in range(noLSTM[0]):
@@ -285,10 +286,10 @@ def build_model(X_train, X_test, Y_train, noLSTM, train_labels):
     plot_model(model, to_file=fnametmp, show_shapes=True,
                show_layer_names=True, rankdir='TB')
     
-    epoch_count = 50
+    epoch_count = 200
     _patience = min(30, max(epoch_count // 5, 20))
     early_stopping = EarlyStopping(monitor='val_loss', min_delta=0,
-                                   patience=_patience, verbose=1, mode='auto')
+                                   patience=_patience, verbose=2, mode='auto')
     tn = TerminateOnNaN()
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, min_lr=1e-7, verbose=1)
     checkpoint_path = os.path.join(rootFolder, "weights.best_{}_{}_{}.hdf5".format("model", noLSTM[0], noLSTM[1]))
@@ -342,9 +343,13 @@ if __name__ == '__main__':
     tmpX = np.array(X_train)
     tmpY = np.array(y_train)
     X_test = tmpX[0:int(floor(0.2 * len(tmpX))), :]
-    xsize = X_train.shape[1] - int((X_train.shape[1] - 3) / 7)
-    for q in range(1, 8):
-        build_model(X_train, X_test, y_train, np.array([q, xsize]), train_labels)
-        print(str(q), " >>>> ", str(xsize), " >> ", X_train.shape[1])
-        xsize = xsize - int((X_train.shape[1] - 3) / 7)
+    archs = [int((X_train.shape[1]) * 1.2),
+             int((X_train.shape[1]) * 1.5),
+             int((X_train.shape[1]) * 2),
+             int((X_train.shape[1]) * 1.5),
+             int((X_train.shape[1]) * 1.2),
+             int((X_train.shape[1]) / 2)]
+    for q in range(len(archs)):
+        build_model(X_train, X_test, y_train, np.array([q, archs[q]]), train_labels)
+        print(archs[q])
 
