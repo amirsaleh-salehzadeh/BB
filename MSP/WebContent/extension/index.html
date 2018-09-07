@@ -21,14 +21,14 @@
 <script type="text/javascript" src="radialBarChart.js"></script>
 <script type="text/javascript" src="muse.connection.js"></script>
 <script type="text/javascript">
-$(document).ready(function(){
-	$.ajax({
-		  type: "POST",
-		  url: "python/muse_eeg.py"
-		}).done(function( o ) {
-		   console.log(o);
+	$(document).ready(function() {
+		$.ajax({
+			type : "POST",
+			url : "python/muse_eeg.py"
+		}).done(function(o) {
+			console.log(o);
 		});
-});
+	});
 </script>
 </head>
 <body>
@@ -40,7 +40,7 @@ $(document).ready(function(){
 					data-type="horizontal">
 					<a href="#" data-role="button" onclick="connectToHeadband()"
 						class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Connect</a>
-					<a href="#" data-role="button"><img alt="battery"
+					<a href="#" data-role="button" data-mini="true"><img alt="battery"
 						src="images/batt.png" width="44%"></a> <a href="#"
 						data-role="button" style="color: green;" id="battVal">--%</a> <a
 						href="#" data-role="button" style="padding: 0;">&nbsp;&nbsp;<img
@@ -52,10 +52,10 @@ $(document).ready(function(){
 					data-type="horizontal">
 					<a href="#" data-role="button" id="hs1" class="horseShoes"
 						style="color: white;">TP9</a> <a href="#" data-role="button"
-						id="hs2" class="horseShoes" style="color: white;">Fp1</a><a
+						id="hs2" class="horseShoes" style="color: white;">FP1</a><a
 						href="#" data-role="button" id="hs3" class="horseShoes"
 						style="color: white;">&nbsp;</a> <a href="#" data-role="button"
-						id="hs4" class="horseShoes" style="color: white;">Fp2</a> <a
+						id="hs4" class="horseShoes" style="color: white;">FP2</a> <a
 						href="#" data-role="button" id="hs5" class="horseShoes"
 						style="color: white;">TP10</a>
 				</div></li>
@@ -63,11 +63,10 @@ $(document).ready(function(){
 				<div data-role="controlgroup" data-type="horizontal">
 					<a href="#" data-role="button" onclick="Restart()"
 						class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Calibrate</a>
-					<!-- 				<a href="#" data-role="button" -->
-					<!-- 					class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye" -->
-					<!-- 					onclick="eyeTrackerPS()" data-icon="eye">Eye Tracker -->
-					<!-- 					Pause/Start</a> -->
 					<a href="#" data-role="button"
+						class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye"
+						onclick="eyeTrackerPS()" data-icon="eye">Eye Tracker
+						Pause/Start</a> <a href="#" data-role="button"
 						class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye"><span
 						href="#" id="Accuracy">0%</span> &nbsp;Recalibrate</a>
 				</div>
@@ -132,53 +131,47 @@ $(document).ready(function(){
 						<i class="fa">Mic</i>
 					</div>
 				</div></li>
-			<!-- 		</li> -->
-			<!-- 							<li> -->
-			<!-- 								<div id="emotion_container"> -->
-			<!-- 									<div id="emotion_icons"> -->
-			<!-- 										<img class="emotion_icon" id="icon1" -->
-			<!-- 											src="images/media/icon_angry.png" style="visibility: hidden;"> -->
-			<!-- 										<img class="emotion_icon" id="icon2" -->
-			<!-- 											src="images/media/icon_sad.png" style="visibility: hidden;"> -->
-			<!-- 										<img class="emotion_icon" id="icon3" -->
-			<!-- 											src="images/media/icon_surprised.png" -->
-			<!-- 											style="visibility: hidden;"> <img class="emotion_icon" -->
-			<!-- 											id="icon4" src="images/media/icon_happy.png" -->
-			<!-- 											style="visibility: visible;"> -->
-			<!-- 									</div> -->
-			<!-- 									<div id="emotion_chart"> -->
-			<!-- 										<svg width="320" height="100"> -->
-			<!-- 											<rect x="20" y="66.35493501450489" -->
-			<!-- 												height="3.6450649854951127" width="30" fill="#2d578b"></rect> -->
-			<!-- 											<rect x="105" y="69.41838057022441" -->
-			<!-- 												height="0.5816194297755792" width="30" fill="#2d578b"></rect> -->
-			<!-- 											<rect x="190" y="60.40301444287701" height="9.59698555712299" -->
-			<!-- 												width="30" fill="#2d578b"></rect> -->
-			<!-- 											<rect x="275" y="20.78637720318563" -->
-			<!-- 												height="49.21362279681437" width="30" fill="#2d578b"></rect> -->
-			<!-- 											<text x="20" y="66.35493501450489" dx="-15" dy="1.2em" -->
-			<!-- 												text-anchor="middle" fill="white" class="labels">0.1</text> -->
-			<!-- 											<text x="135" y="69.41838057022441" dx="-15" dy="1.2em" -->
-			<!-- 												text-anchor="middle" fill="white" class="labels">0.0</text> -->
-			<!-- 											<text x="220" y="60.40301444287701" dx="-15" dy="1.2em" -->
-			<!-- 												text-anchor="middle" fill="white" class="labels">0.1</text> -->
-			<!-- 											<text x="305" y="20.78637720318563" dx="-15" dy="1.2em" -->
-			<!-- 												text-anchor="middle" fill="white" class="labels">0.7</text> -->
-			<!-- 											<text x="20" y="70" dx="-15" text-anchor="middle" -->
-			<!-- 												style="font-size: 12" transform="translate(0, 18)" -->
-			<!-- 												class="yAxis">angry</text> -->
-			<!-- 											<text x="135" y="70" dx="-15" text-anchor="middle" -->
-			<!-- 												style="font-size: 12" transform="translate(0, 18)" -->
-			<!-- 												class="yAxis">sad</text> -->
-			<!-- 											<text x="220" y="70" dx="-15" text-anchor="middle" -->
-			<!-- 												style="font-size: 12" transform="translate(0, 18)" -->
-			<!-- 												class="yAxis">surprised</text> -->
-			<!-- 											<text x="305" y="70" dx="-15" text-anchor="middle" -->
-			<!-- 												style="font-size: 12" transform="translate(0, 18)" -->
-			<!-- 												class="yAxis">happy</text></svg> -->
-			<!-- 									</div> -->
-			<!-- 								</div> -->
-			<!-- 							</li> -->
+			<li>
+				<div id="emotion_container">
+					<div id="emotion_icons">
+						<img class="emotion_icon" id="icon1"
+							src="images/media/icon_angry.png" style="visibility: hidden;">
+						<img class="emotion_icon" id="icon2"
+							src="images/media/icon_sad.png" style="visibility: hidden;">
+						<img class="emotion_icon" id="icon3"
+							src="images/media/icon_surprised.png" style="visibility: hidden;">
+						<img class="emotion_icon" id="icon4"
+							src="images/media/icon_happy.png" style="visibility: visible;">
+					</div>
+					<div id="emotion_chart">
+						<svg width="320" height="100">
+														<rect x="20" y="66.35493501450489"
+								height="3.6450649854951127" width="30" fill="#2d578b"></rect>
+														<rect x="105" y="69.41838057022441"
+								height="0.5816194297755792" width="30" fill="#2d578b"></rect>
+														<rect x="190" y="60.40301444287701"
+								height="9.59698555712299" width="30" fill="#2d578b"></rect>
+														<rect x="275" y="20.78637720318563"
+								height="49.21362279681437" width="30" fill="#2d578b"></rect>
+														<text x="20" y="66.35493501450489" dx="-15" dy="1.2em"
+								text-anchor="middle" fill="white" class="labels">0.1</text>
+														<text x="135" y="69.41838057022441" dx="-15" dy="1.2em"
+								text-anchor="middle" fill="white" class="labels">0.0</text>
+														<text x="220" y="60.40301444287701" dx="-15" dy="1.2em"
+								text-anchor="middle" fill="white" class="labels">0.1</text>
+														<text x="305" y="20.78637720318563" dx="-15" dy="1.2em"
+								text-anchor="middle" fill="white" class="labels">0.7</text>
+														<text x="20" y="70" dx="-15" text-anchor="middle"
+								style="font-size: 12" transform="translate(0, 18)" class="yAxis">Angry</text>
+														<text x="135" y="70" dx="-15" text-anchor="middle"
+								style="font-size: 12" transform="translate(0, 18)" class="yAxis">Sad</text>
+														<text x="220" y="70" dx="-15" text-anchor="middle"
+								style="font-size: 12" transform="translate(0, 18)" class="yAxis">Surprised</text>
+														<text x="305" y="70" dx="-15" text-anchor="middle"
+								style="font-size: 12" transform="translate(0, 18)" class="yAxis">Happy</text></svg>
+					</div>
+				</div>
+			</li>
 			<li class="ui-bar"><div class="ui-block-solo"
 					id="webGazerContainer">
 					<video id="webgazerVideoPresentation" autoplay="" width="333"

@@ -5,10 +5,6 @@ navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia
 		|| navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
 var audioContext;
-function updateBar(id, value) {
-	$("#" + id).css("height", Math.abs(100 - Math.abs(value * 100)) + "%");
-}
-
 var spectro;
 
 function init() {
@@ -17,7 +13,7 @@ function init() {
 			width : function() {
 				return 333;
 			},
-			height : 111
+			height : 333
 		},
 		audio : {
 			enable : true

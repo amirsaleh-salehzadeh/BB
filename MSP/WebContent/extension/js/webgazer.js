@@ -10786,22 +10786,12 @@ var mosseFilterResponses = function() {
         videoElement.id = webgazer.params.videoElementId;
         videoElement.autoplay = true;
         console.log(videoElement);
-//        videoElement.style.display = 'none';
-
-        //turn the stream into a magic URL
         videoElement.src = videoSrc;
-//        document.body.appendChild(videoElement);
-
         videoElementCanvas = document.createElement('canvas');
         videoElementCanvas.id = webgazer.params.videoElementCanvasId;
-//        videoElementCanvas.style.display = 'none';
         document.body.appendChild(videoElementCanvas);
-
         addMouseEventListeners();
-
         document.body.appendChild(gazeDot);
-
-        //BEGIN CALLBACK LOOP
         paused = false;
 
         clockStart = performance.now();

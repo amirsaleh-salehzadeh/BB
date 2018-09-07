@@ -9,7 +9,7 @@
   },
   "background": {
 	    "persistent": false,
-	    "scripts": ["js/jquery.js"]
+	    "scripts": ["js/jquery.js", "js/background.js"]
 	  },
   "icons": {
 	    "16": "css/images/logo.png",
