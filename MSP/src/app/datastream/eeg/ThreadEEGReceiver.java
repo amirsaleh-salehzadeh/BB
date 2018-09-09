@@ -27,7 +27,7 @@ public class ThreadEEGReceiver implements Runnable {
 	public ThreadEEGReceiver() {
 		// muse-io.exe --device Muse-1E5B
 		// muse-io.exe --osc osc.tcp://localhost:4444
-		// muse-io --device Muse-1E5B --osc osc.udp://localhost:5003
+		// muse-io --device Muse-1E5B --osc osc.udp://localhost:5000
 		museOscServer = new MuseOscServer();
 		museOscServer.startRecord();
 		mapper = new ObjectMapper();

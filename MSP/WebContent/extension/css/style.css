@@ -98,8 +98,7 @@ html, body {
 }
 
 #chartEEGs, #chartEEGs canvas {
-	height: 111px;
-	max-width: 333px;
+	height: 523px;
 	width: 333px;
 }
 

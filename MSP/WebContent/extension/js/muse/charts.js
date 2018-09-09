@@ -8,12 +8,10 @@ function lineChart(lineData, domain, w, h, label) {
 		stroke("rgb(0,255,0)");
 	});
 	endShape();
-
-	// annotation dot at last point
 	var x = map(lineData.length - 1, 0, lineData.length - 1, 0, innerW);
 	var y = map(lineData[lineData.length - 1], domain[0], domain[1], h, 0);
 	ellipse(x, y, 5, 5);
-	fill("rgb(0,255,0)")
+	fill("rgb(0,255,0)");
 	var value = nf(lineData[lineData.length - 1], null, 2);
 	noStroke();
 	textAlign(LEFT, CENTER);
@@ -30,6 +28,7 @@ function areaChart(areaData, domain, w, h, label) {
 		x = map(i, 0, areaData.length - 1, 0, innerW);
 		y = map(d, domain[0], domain[1], h, 0);
 		vertex(x, y);
+		
 	});
 	x = map(areaData.length - 1, 0, areaData.length - 1, 0, innerW);
 	y = map(domain[0], domain[0], domain[1], h, 0);
@@ -43,9 +42,7 @@ function areaChart(areaData, domain, w, h, label) {
 	strokeWeight(2);
 	line(lastX, h, lastX, lastY);
 	strokeWeight(1);
-	fill(0);
-	// ellipse(lastX,lastY,5,5);
-
+	fill("rgb(0,255,0)");
 	var value = nf(areaData[areaData.length - 1], null, 2);
 	noStroke();
 	textAlign(LEFT, CENTER);

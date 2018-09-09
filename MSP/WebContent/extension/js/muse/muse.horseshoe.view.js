@@ -20,13 +20,6 @@ function horseshoeView(model, idArr,title, description) {
 	var colors = [ '#0A7B83', '#2AA876', '#FFD265', '#F19C65', '#CE4D45'];
 
 	my.render = function() {
-		//console.log('rawEEGView.render');
-		//console.log(my);
-		//console.log('title: ' + my.getTitle());
-		//console.log('description: ' + my.getDescription());
-
-		//my.renderCommon();
-
 		var horseshoe = select('#horseshoe');
 		horseshoe.style('margin-top','0px');
 		horseshoe.style('margin-left','0px');

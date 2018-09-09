@@ -8,7 +8,7 @@
 <script src="js/jquery.mobile-1.4.5.min.js"></script>
 <script type="text/javascript"
 	src="js/js.plots/charts.d3.core.engine.js"></script>
-<script type="text/javascript" src="js/js.plots/chart.radial.bar.js"></script>
+<!-- <script type="text/javascript" src="js/js.plots/chart.radial.bar.js"></script> -->
 
 <script src="js/libraries/p5.js" type="text/javascript"></script>
 <script src="js/libraries/p5.dom.js" type="text/javascript"></script>
@@ -25,34 +25,17 @@
 <script type="text/javascript" src="js/muse/sketch.js"></script>
 <script src="http://127.0.0.1:8085/socket.io/socket.io.js"></script>
 <ul data-role="listview">
-	<li>
-		<div class="ui-grid-a">
-			<div class="ui-block-a">
-				<input id="serverAddress" type="text" value="http://127.0.0.1"
-					data-mini="true">
-			</div>
-			<div class="ui-block-b">
-				<input id="serverPort" type="text" value="8085" data-mini="true">
-			</div>
-		</div>
-	</li>
-	<li>
-		<div class="ui-grid-a">
-			<div class="ui-block-a">
-				<input id="clientAddress" type="text" value="localhost"
-					data-mini="true">
-			</div>
-			<div class="ui-block-b">
-				<input id="clientPort" type="text" value="5000" data-mini="true">
-			</div>
-		</div>
-	</li>
+	<li><input id="serverAddress" type="hidden"
+		value="http://127.0.0.1" data-mini="true"> <input
+		id="serverPort" type="hidden" value="8085" data-mini="true"> <input
+		id="clientAddress" type="hidden" value="localhost" data-mini="true">
+		<input id="clientPort" type="hidden" value="5000" data-mini="true"></li>
 	<li style="padding-left: 0;"><div data-role="controlgroup"
 			data-type="horizontal">
 			<!-- 					onclick="connectToMuse(this)" -->
-			<a href="#" data-role="button" style="height: 31px;"
-				id="connectToMuseBTN"
-				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Connect</a>
+			<!-- 			<a href="#" data-role="button" style="height: 31px;" -->
+			<!-- 				id="connectToMuseBTN" -->
+			<!-- 				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Connect</a> -->
 			<a href="#" data-role="button" style="height: 31px; color: green;"
 				id="battVal">--%</a> <a href="#" data-role="button"
 				style="padding: 2px; min-height: 49px;"> <svg id="horseshoe"
@@ -80,38 +63,36 @@
 				src="css/images/eye.png" width="63%">
 			</a>
 		</div></li>
-	<li>
-		<div id="status"></div>
-	</li>
-	<li style="padding-left: 0;">
-		<div data-role="controlgroup" data-type="horizontal">
-			<a href="#" data-role="button" onclick="Restart()"
-				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Calibrate</a>
-			<a href="#" data-role="button"
-				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye"><span
-				id="Accuracy">0%</span> &nbsp;Accuracy</a>
-		</div>
-	</li>
-	<li style="padding-left: 0;">
-		<div data-role="controlgroup" data-type="horizontal">
-			<a href="#" data-role="button" onclick="readingStart()"
-				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-arrow-d-r">Start</a>
-			<a href="#" data-role="button" onclick="readingPause()"
-				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Pause</a>
-			<a href="#" data-role="button" onclick="finishRecording()"
-				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">End</a>
-		</div>
-	</li>
-	<li>
-		<div id="chartBandWidths" style="display: inline;"></div> <script
-			type="text/javascript" src="js/js.plots/chart.radial.js"></script>
-		<div class="ui-bar" style="display: inline; margin-left: -13px;"
-			id="focusThermo"></div>
-		<div class="ui-bar" style="display: inline; margin-left: -27px;"
-			id="relaxThermo"></div> <script type="text/javascript"
-			src="js/js.plots/chart.thermo.js"></script>
-	</li>
-	<li>
+	<li><div id="chartEEGs"></div></li>
+	<!-- 	<li> -->
+	<!-- 		<div id="status"></div> -->
+	<!-- 	</li> -->
+	<!-- 	<li style="padding-left: 0;"> -->
+	<!-- 		<div data-role="controlgroup" data-type="horizontal"> -->
+	<!-- 			<a href="#" data-role="button" onclick="Restart()" -->
+	<!-- 				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Calibrate</a> -->
+	<!-- 			<a href="#" data-role="button" -->
+	<!-- 				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye"><span -->
+	<!-- 				id="Accuracy">0%</span> &nbsp;Accuracy</a> -->
+	<!-- 		</div> -->
+	<!-- 	</li> -->
+	<!-- 	<li style="padding-left: 0;"> -->
+	<!-- 		<div data-role="controlgroup" data-type="horizontal"> -->
+	<!-- 			<a href="#" data-role="button" onclick="readingStart()" -->
+	<!-- 				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-arrow-d-r">Start</a> -->
+	<!-- 			<a href="#" data-role="button" onclick="readingPause()" -->
+	<!-- 				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">Pause</a> -->
+	<!-- 			<a href="#" data-role="button" onclick="finishRecording()" -->
+	<!-- 				class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-eye">End</a> -->
+	<!-- 		</div> -->
+	<!-- 	</li> -->
+<!-- 	<li id="chartBandWidths" class="ui-bar"><script -->
+<!-- 			type="text/javascript" src="js/js.plots/chart.radial.js"></script> -->
+<!-- 		<div class="ui-bar" style="display: inline; margin-left: -13px;" -->
+<!-- 			id="focusThermo"></div> -->
+<!-- 		<div class="ui-bar" style="display: inline; margin-left: -27px;" -->
+<!-- 			id="relaxThermo"></div></li> -->
+<!-- 	<li> -->
 		<div class="hprogress" style="background-color: #FFC300">
 			<div class="hprogress-bar animated slideInDown" role="progressbar"
 				aria-valuenow="85" aria-valuemin="0" aria-valuemax="100" id="X"></div>
@@ -134,5 +115,25 @@
 			</div>
 		</div>
 	</li>
-	<li><div id="chartEEGs"></div></li>
+	<li>
+	<canvas></canvas>
+
+		<script src="shaders/line.vert.js"></script>
+		<script src="shaders/line-uniform.frag.js"></script>
+		<script src="shaders/line-hue.frag.js"></script>
+
+		<script src="js/gl-matrix-min.js"></script>
+		<script src="js/webgl-helpers.js"></script>
+		<script src="js/camera.js"></script>
+		<script src="js/audio.js"></script>
+		<script src="js/waterfall.js"></script>
+		<script src="js/main.js"></script>
+	</li>
+	<!-- 	<li><canvas id="EEG1FFT"></canvas></li> -->
+	<!-- 	<li><canvas id="EEG2FFT"></canvas></li> -->
+	<!-- 	<li><canvas id="EEG3FFT"></canvas></li> -->
+	<!-- 	<li><canvas id="EEG4FFT"></canvas></li> -->
 </ul>
+<!-- <script src="js/js.plots/audiobuffer-slice.js"></script> -->
+<!-- <script src="js/js.plots/chroma.js"></script> -->
+<!-- <script src="js/js.plots/spectrogram.js"></script> -->

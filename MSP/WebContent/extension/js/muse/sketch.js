@@ -1,15 +1,11 @@
 var muse;
-
-// initialize museData
-var dummy = true;
-
+var dummy = false;
 var done = false;
-
 var views = [];
 var viewIndex = 0;
 var currentView = null;
 
-var canvasHeight = 111;
+var canvasHeight = 533;
 
 var muselinks = {
 	'Raw EEG' : 'http://developer.choosemuse.com/research-tools/available-data#Raw_EEG',
@@ -109,27 +105,27 @@ var dataMuse = {
 		}
 	},
 	horseshoe : {},
+	batt : {},
+	acc : {
+		ACC_X : [],
+		ACC_Y : [],
+		ACC_Z : []
+	},
 	touching_forehead : 0,
 	blink : 0,
 	jaw : 0
 };
 
-var maxN = 300;
+var maxN = 500;
 var preloadImg = null;
 
-//function preload() {
-//	preloadImg = createImg('preloader.gif');
-//}
-
+// function preload() {
+// preloadImg = createImg('preloader.gif');
+// }
 function setup() {
 	var parentContainer = select('#chartEEGs');
-//	preloadImg.parent('chartEEGs');
-//	preloadImg.position(0.5 * parentContainer.width, 0.5 * canvasHeight);
 	var can = createCanvas(parentContainer.width, canvasHeight);
-
-	can.parent('chartEEGs');
-
-	// data connection to muse with sampling rate of muse
+	can.parent('#chartEEGs');
 	if (dummy) {
 		console.log('using dummy data');
 		muse = museData().dummyData();
@@ -147,6 +143,8 @@ function setup() {
 	muse.listenTo('/muse/elements/raw_fft1');
 	muse.listenTo('/muse/elements/raw_fft2');
 	muse.listenTo('/muse/elements/raw_fft3');
+	muse.listenTo('/muse/batt');
+	muse.listenTo('/muse/acc');
 	muse.listenTo('/muse/elements/delta_absolute');
 	muse.listenTo('/muse/elements/theta_absolute');
 	muse.listenTo('/muse/elements/alpha_absolute');
@@ -161,11 +159,7 @@ function setup() {
 	muse.listenTo('/muse/elements/touching_forehead');
 	muse.listenTo('/muse/elements/blink');
 	muse.listenTo('/muse/elements/jaw_clench');
-
-	// muse.get('/muse/elements/theta_relative');
-
 	muse.start();
-
 	var rawfftview = rawFFTView(
 			dataMuse,
 			[ '/muse/elements/raw_fft0', '/muse/elements/raw_fft1',
@@ -175,10 +169,11 @@ function setup() {
 	views
 			.push(rawEEGView(
 					dataMuse,
-					[ '/muse/eeg' ],
+					[ '/muse/eeg', '/muse/elements/horseshoe',
+							'/muse/elements/touching_forehead' ],
 					'Raw EEG',
 					'This is the raw EEG data for each channel on the headband as measured in microvolts.'));
-	views.push(rawfftview);
+//	views.push(rawfftview);
 	views
 			.push(absoluteBandView(
 					dataMuse,
@@ -189,25 +184,16 @@ function setup() {
 							'/muse/elements/gamma_absolute' ],
 					'Absolute Band Powers',
 					'The absolute band power for a given frequency range (for instance, alpha, i.e. 9-13Hz) is the logarithm of the sum of the Power Spectral Density of the EEG data over that frequency range. They are provided for each of the four to six channels/electrode sites on Muse. Since it is a logarithm, some of the values will be negative (i.e. when the absolute power is less than 1) They are given on a log scale, units are Bels.'));
-	views
-			.push(relativeBandView(
-					dataMuse,
-					[ '/muse/elements/delta_relative',
-							'/muse/elements/theta_relative',
-							'/muse/elements/alpha_relative',
-							'/muse/elements/beta_relative',
-							'/muse/elements/gamma_relative' ],
-					'Relative Band Powers',
-					'The relative band powers are calculated by dividing the absolute linear-scale power in one band over the sum of the absolute linear-scale powers in all bands. The linear-scale band power can be calculated from the log-scale band power thusly: linear-scale band power = 10^ (log-scale band power). Therefore, the relative band powers can be calculated as percentages of linear-scale band powers in each band. The resulting value is between 0 and 1. However, the value will never be 0 or 1. These values are emitted at 10Hz.'));
-	views
-			.push(horseshoeView(
-					dataMuse,
-					[ '/muse/elements/horseshoe',
-							'/muse/elements/touching_forehead' ],
-					'Headband Status / Horseshoe',
-					'Status indicator for each channel (think of the Muse status indicator that looks like a horseshoe). 1 = good, 2 = ok, >=3 bad'));
-
-	// set the font
+//	views
+//			.push(relativeBandView(
+//					dataMuse,
+//					[ '/muse/elements/delta_relative',
+//							'/muse/elements/theta_relative',
+//							'/muse/elements/alpha_relative',
+//							'/muse/elements/beta_relative',
+//							'/muse/elements/gamma_relative' ],
+//					'Relative Band Powers',
+//					'The relative band powers are calculated by dividing the absolute linear-scale power in one band over the sum of the absolute linear-scale powers in all bands. The linear-scale band power can be calculated from the log-scale band power thusly: linear-scale band power = 10^ (log-scale band power). Therefore, the relative band powers can be calculated as percentages of linear-scale band powers in each band. The resulting value is between 0 and 1. However, the value will never be 0 or 1. These values are emitted at 10Hz.'));
 	textFont('HelveticaNeue-Light');
 	frameRate(30);
 
@@ -224,31 +210,17 @@ function draw() {
 		background('transprant');
 		return;
 	}
-
-//	preloadImg.hide();
 	background(0);
-
-//	if (frameCount % 10 == 0) {
-//		console.log('frameRate: ' + frameRate());
-//	}
-
 	updateData();
-
 	views[viewIndex].render();
 	currentView.render();
-
-	// var alph = muse.get('/muse/elements/alpha_relative');
-	// var beta = muse.get('/muse/elements/beta_relative');
-	// var theta = muse.get('/muse/elements/theta_relative');
-
-	// console.log('alph',alph.mean);
-	// console.log('beta',beta.mean);
-	// console.log('theta',theta.mean);
 
 }
 
 function updateData() {
 	var eeg = muse.get('/muse/eeg');
+	var batt = muse.get('/muse/batt');
+	var acc = muse.get('/muse/acc');
 	var raw_fft0 = muse.get('/muse/elements/raw_fft0');
 	var raw_fft1 = muse.get('/muse/elements/raw_fft1');
 	var raw_fft2 = muse.get('/muse/elements/raw_fft2');
@@ -275,9 +247,12 @@ function updateData() {
 	dataMuse.rawEEG.leftFront.push(eeg.leftFront);
 	dataMuse.rawEEG.rightFront.push(eeg.rightFront);
 	dataMuse.rawEEG.rightEar.push(eeg.rightEar);
+	dataMuse.batt = batt;
+
+	dataMuse.acc = acc;
 
 	shiftArrays([ dataMuse.rawEEG.leftEar, dataMuse.rawEEG.leftFront,
-		dataMuse.rawEEG.rightFront, dataMuse.rawEEG.rightEar ], maxN);
+			dataMuse.rawEEG.rightFront, dataMuse.rawEEG.rightEar ], maxN);
 
 	// raw FFT
 	dataMuse.rawFFT.leftEar = raw_fft0.values;
@@ -294,9 +269,10 @@ function updateData() {
 	dataMuse.absoluteBand.gamma.leftEar.push(gamma_absolute.leftEar);
 
 	shiftArrays([ dataMuse.absoluteBand.delta.leftEar,
-		dataMuse.absoluteBand.theta.leftEar, dataMuse.absoluteBand.alpha.leftEar,
-		dataMuse.absoluteBand.beta.leftEar, dataMuse.absoluteBand.gamma.leftEar ],
-			maxN);
+			dataMuse.absoluteBand.theta.leftEar,
+			dataMuse.absoluteBand.alpha.leftEar,
+			dataMuse.absoluteBand.beta.leftEar,
+			dataMuse.absoluteBand.gamma.leftEar ], maxN);
 
 	// left front
 	dataMuse.absoluteBand.delta.leftFront.push(delta_absolute.leftFront);
@@ -305,12 +281,11 @@ function updateData() {
 	dataMuse.absoluteBand.beta.leftFront.push(beta_absolute.leftFront);
 	dataMuse.absoluteBand.gamma.leftFront.push(gamma_absolute.leftFront);
 
-	shiftArrays(
-			[ dataMuse.absoluteBand.delta.leftFront,
-				dataMuse.absoluteBand.theta.leftFront,
-				dataMuse.absoluteBand.alpha.leftFront,
-				dataMuse.absoluteBand.beta.leftFront,
-				dataMuse.absoluteBand.gamma.leftFront ], maxN);
+	shiftArrays([ dataMuse.absoluteBand.delta.leftFront,
+			dataMuse.absoluteBand.theta.leftFront,
+			dataMuse.absoluteBand.alpha.leftFront,
+			dataMuse.absoluteBand.beta.leftFront,
+			dataMuse.absoluteBand.gamma.leftFront ], maxN);
 
 	// right front
 	dataMuse.absoluteBand.delta.rightFront.push(delta_absolute.rightFront);
@@ -320,10 +295,10 @@ function updateData() {
 	dataMuse.absoluteBand.gamma.rightFront.push(gamma_absolute.rightFront);
 
 	shiftArrays([ dataMuse.absoluteBand.delta.rightFront,
-		dataMuse.absoluteBand.theta.rightFront,
-		dataMuse.absoluteBand.alpha.rightFront,
-		dataMuse.absoluteBand.beta.rightFront,
-		dataMuse.absoluteBand.gamma.rightFront ], maxN);
+			dataMuse.absoluteBand.theta.rightFront,
+			dataMuse.absoluteBand.alpha.rightFront,
+			dataMuse.absoluteBand.beta.rightFront,
+			dataMuse.absoluteBand.gamma.rightFront ], maxN);
 
 	// right ear
 	dataMuse.absoluteBand.delta.rightEar.push(delta_absolute.rightEar);
@@ -332,12 +307,11 @@ function updateData() {
 	dataMuse.absoluteBand.beta.rightEar.push(beta_absolute.rightEar);
 	dataMuse.absoluteBand.gamma.rightEar.push(gamma_absolute.rightEar);
 
-	shiftArrays(
-			[ dataMuse.absoluteBand.delta.rightEar,
-				dataMuse.absoluteBand.theta.rightEar,
-				dataMuse.absoluteBand.alpha.rightEar,
-				dataMuse.absoluteBand.beta.rightEar,
-				dataMuse.absoluteBand.gamma.rightEar ], maxN);
+	shiftArrays([ dataMuse.absoluteBand.delta.rightEar,
+			dataMuse.absoluteBand.theta.rightEar,
+			dataMuse.absoluteBand.alpha.rightEar,
+			dataMuse.absoluteBand.beta.rightEar,
+			dataMuse.absoluteBand.gamma.rightEar ], maxN);
 
 	// calculate absolute means
 	dataMuse.absoluteBand.delta.mean
@@ -356,9 +330,12 @@ function updateData() {
 			.push((gamma_absolute.leftEar + gamma_absolute.leftFront
 					+ gamma_absolute.rightFront + gamma_absolute.rightEar) / 4);
 
-	shiftArrays([ dataMuse.absoluteBand.delta.mean, dataMuse.absoluteBand.theta.mean,
-		dataMuse.absoluteBand.alpha.mean, dataMuse.absoluteBand.beta.mean,
-		dataMuse.absoluteBand.gamma.mean ], maxN);
+	shiftArrays(
+			[ dataMuse.absoluteBand.delta.mean,
+					dataMuse.absoluteBand.theta.mean,
+					dataMuse.absoluteBand.alpha.mean,
+					dataMuse.absoluteBand.beta.mean,
+					dataMuse.absoluteBand.gamma.mean ], maxN);
 
 	// relative band powers
 	// left ear
@@ -369,9 +346,10 @@ function updateData() {
 	dataMuse.relativeBand.gamma.leftEar.push(gamma_relative.leftEar);
 
 	shiftArrays([ dataMuse.relativeBand.delta.leftEar,
-		dataMuse.relativeBand.theta.leftEar, dataMuse.relativeBand.alpha.leftEar,
-		dataMuse.relativeBand.beta.leftEar, dataMuse.relativeBand.gamma.leftEar ],
-			maxN);
+			dataMuse.relativeBand.theta.leftEar,
+			dataMuse.relativeBand.alpha.leftEar,
+			dataMuse.relativeBand.beta.leftEar,
+			dataMuse.relativeBand.gamma.leftEar ], maxN);
 
 	// left Front
 	dataMuse.relativeBand.delta.leftFront.push(delta_relative.leftFront);
@@ -380,12 +358,11 @@ function updateData() {
 	dataMuse.relativeBand.beta.leftFront.push(beta_relative.leftFront);
 	dataMuse.relativeBand.gamma.leftFront.push(gamma_relative.leftFront);
 
-	shiftArrays(
-			[ dataMuse.relativeBand.delta.leftFront,
-				dataMuse.relativeBand.theta.leftFront,
-				dataMuse.relativeBand.alpha.leftFront,
-				dataMuse.relativeBand.beta.leftFront,
-				dataMuse.relativeBand.gamma.leftFront ], maxN);
+	shiftArrays([ dataMuse.relativeBand.delta.leftFront,
+			dataMuse.relativeBand.theta.leftFront,
+			dataMuse.relativeBand.alpha.leftFront,
+			dataMuse.relativeBand.beta.leftFront,
+			dataMuse.relativeBand.gamma.leftFront ], maxN);
 
 	// right front
 	dataMuse.relativeBand.delta.rightFront.push(delta_relative.rightFront);
@@ -395,10 +372,10 @@ function updateData() {
 	dataMuse.relativeBand.gamma.rightFront.push(gamma_relative.rightFront);
 
 	shiftArrays([ dataMuse.relativeBand.delta.rightFront,
-		dataMuse.relativeBand.theta.rightFront,
-		dataMuse.relativeBand.alpha.rightFront,
-		dataMuse.relativeBand.beta.rightFront,
-		dataMuse.relativeBand.gamma.rightFront ], maxN);
+			dataMuse.relativeBand.theta.rightFront,
+			dataMuse.relativeBand.alpha.rightFront,
+			dataMuse.relativeBand.beta.rightFront,
+			dataMuse.relativeBand.gamma.rightFront ], maxN);
 
 	// right ear
 	dataMuse.relativeBand.delta.rightEar.push(delta_relative.rightEar);
@@ -407,12 +384,11 @@ function updateData() {
 	dataMuse.relativeBand.beta.rightEar.push(beta_relative.rightEar);
 	dataMuse.relativeBand.gamma.rightEar.push(gamma_relative.rightEar);
 
-	shiftArrays(
-			[ dataMuse.relativeBand.delta.rightEar,
-				dataMuse.relativeBand.theta.rightEar,
-				dataMuse.relativeBand.alpha.rightEar,
-				dataMuse.relativeBand.beta.rightEar,
-				dataMuse.relativeBand.gamma.rightEar ], maxN);
+	shiftArrays([ dataMuse.relativeBand.delta.rightEar,
+			dataMuse.relativeBand.theta.rightEar,
+			dataMuse.relativeBand.alpha.rightEar,
+			dataMuse.relativeBand.beta.rightEar,
+			dataMuse.relativeBand.gamma.rightEar ], maxN);
 
 	// calculate relative means
 	dataMuse.relativeBand.delta.mean
@@ -431,9 +407,12 @@ function updateData() {
 			.push((gamma_relative.leftEar + gamma_relative.leftFront
 					+ gamma_relative.rightFront + gamma_relative.rightEar) / 4);
 
-	shiftArrays([ dataMuse.relativeBand.delta.mean, dataMuse.relativeBand.theta.mean,
-		dataMuse.relativeBand.alpha.mean, dataMuse.relativeBand.beta.mean,
-		dataMuse.relativeBand.gamma.mean ], maxN);
+	shiftArrays(
+			[ dataMuse.relativeBand.delta.mean,
+					dataMuse.relativeBand.theta.mean,
+					dataMuse.relativeBand.alpha.mean,
+					dataMuse.relativeBand.beta.mean,
+					dataMuse.relativeBand.gamma.mean ], maxN);
 
 	// horseshoe
 	// console.log(horseshoe);
@@ -515,13 +494,6 @@ function shiftArrays(arrOfArrays, n) {
 			arr.shift();
 		}
 	});
-}
-
-function windowResized() {
-	console.log('windowResized')
-	resizeCanvas(select('#chartEEGs').width, canvasHeight);
-	console.log('width', width, 'height', height);
-
 }
 
 // this needs to be part of a helper library together with sum and mean maybe

@@ -322,6 +322,8 @@ function getCallback(_id) {
     '/muse/elements/theta_relative': regularParserMean,
     '/muse/elements/horseshoe': regularParser,
     '/muse/elements/is_good': regularParser,
+    '/muse/batt': oneValueParser,
+    '/muse/acc': arrParser,
     '/muse/elements/blink': oneValueParser,
     '/muse/elements/jaw_clench': oneValueParser,
     '/muse/elements/touching_forehead': oneValueParser,

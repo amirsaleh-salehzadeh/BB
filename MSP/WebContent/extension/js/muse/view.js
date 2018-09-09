@@ -7,10 +7,10 @@ function view(model, idArr,title, description){
 	var idString = '<code>' + idArr.join('<br/>') + '</code>';
 	var description = description;
 	var padding = {
-		left: 0,
-		top: 0,
-		right: 10,
-		bottom: 0,
+		left: 2,
+		top: 3,
+		right: 2,
+		bottom: 3,
 	};
 
 	var h1 = 42;
