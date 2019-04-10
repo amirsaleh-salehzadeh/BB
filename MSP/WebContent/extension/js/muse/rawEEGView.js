@@ -85,15 +85,6 @@ var padding = my.getPadding();
 			text(f,r,6);
 			pop();
 		});
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		pop();
 	}
 

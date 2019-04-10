@@ -22,6 +22,10 @@ from biosppy.signals.tools import band_power
 from sklearn.preprocessing.data import normalize
 from keras.engine.input_layer import Input
 from keras.optimizers import Adam
+from keras.layers.convolutional import Conv2D
+from keras.layers.pooling import MaxPooling2D
+from keras.layers.normalization import BatchNormalization
+from keras.constraints import max_norm
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -73,7 +77,7 @@ def get_row_data(fp, labels, folders):
             dump = pickle.load(f)
             return dump[0], dump[1], dump[2]
     file_dir = folders[fp]
-    datasignals = pd.read_csv(filepath_or_buffer=fp, sep=',',
+    datasignals = pd.read_csv(filepath_or_buffer=fp, sep=',', header=None, skiprows=1,
                               dtype='float', names=["EEG1", "EEG2", "Acc_X", "Acc_Y", "Acc_Z"])
     datasignals = datasignals.drop_duplicates(keep=False)
     drawMe(xVal=datasignals, yVal=None, title=file_dir, xlabel="time-steps",
@@ -124,7 +128,7 @@ def build_inputs(files_list, accel_labels, file_label_dict):
                 chunksize=None, tupleize_cols=None, date_format=None, doublequote=True,
                 escapechar=None)
 #                 tmp = pd.DataFrame(columns=[])
-            tmp = tmp[['mean', 'skew']]
+            tmp = tmp[['mean']]
             processedFeatures = vectorize(tmp)
             for inputs in range(len(processedFeatures)):
                 X_seq.append(processedFeatures[inputs])

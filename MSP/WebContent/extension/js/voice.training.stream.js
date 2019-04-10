@@ -13,7 +13,7 @@ function init() {
 			width : function() {
 				return 333;
 			},
-			height : 333
+			height : 256
 		},
 		audio : {
 			enable : true
@@ -50,7 +50,7 @@ function handleMicStream(stream) {
 	var input = audioContext.createMediaStreamSource(stream);
 	var analyser = audioContext.createAnalyser();
 	analyser.smoothingTimeConstant = 0;
-	analyser.fftSize = 8192;
+	analyser.fftSize = 512;
 	input.connect(analyser);
 	spectro.connectSource(analyser, audioContext);
 	spectro.start();
